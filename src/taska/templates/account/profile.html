@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Мой профиль — {{ site.app_name }}{% endblock %}
+
+{% block content %}
+<section>
+  <h1>Мой профиль</h1>
+  <p class="muted">Редактирование данных и привязка аккаунтов для входа.</p>
+
+  {% if success %}
+    <div class="alert alert-success">{{ success }}</div>
+  {% endif %}
+  {% if error %}
+    <div class="alert alert-error">{{ error }}</div>
+  {% endif %}
+
+  <div class="split-layout">
+    <form method="post" action="/account" class="card form">
+      <h2>Основное</h2>
+
+      <label>
+        Отображаемое имя
+        <input type="text" name="display_name" value="{{ user.display_name or user.username }}" required>
+      </label>
+
+      <label>
+        О себе
+        <textarea name="bio" rows="4" placeholder="Кратко о себе и опыте">{{ user.bio or '' }}</textarea>
+      </label>
+
+      <dl class="token-details">
+        <dt>Логин</dt>
+        <dd>@{{ user.username }}</dd>
+        <dt>Должность</dt>
+        <dd>{{ position_label }}</dd>
+        {% if user.experience_years is not none %}
+          <dt>Стаж</dt>
+          <dd>{{ user.experience_years }} лет</dd>
+        {% endif %}
+      </dl>
+
+      <h2>Смена пароля</h2>
+      <label>
+        Текущий пароль
+        <input type="password" name="current_password" autocomplete="current-password">
+      </label>
+      <label>
+        Новый пароль
+        <input type="password" name="new_password" autocomplete="new-password" minlength="8">
+      </label>
+      <label>
+        Подтверждение
+        <input type="password" name="new_password_confirm" autocomplete="new-password">
+      </label>
+
+      <button type="submit" class="btn btn-primary">Сохранить</button>
+    </form>
+
+    <div class="card">
+      <h2>Привязка аккаунтов</h2>
+      <p class="muted">После привязки можно входить через GitHub или Telegram.</p>
+
+      <div class="oauth-block">
+        <h3>GitHub</h3>
+        {% if user.github_username %}
+          <p>Привязан: <strong>@{{ user.github_username }}</strong></p>
+          <form method="post" action="/account/unlink/github">
+            <button type="submit" class="btn btn-ghost">Отвязать</button>
+          </form>
+        {% elif github_configured %}
+          <a href="/account/link/github" class="btn btn-oauth btn-github">Привязать GitHub</a>
+        {% else %}
+          <p class="muted">GitHub OAuth не настроен (TASKA_GITHUB_CLIENT_ID)</p>
+        {% endif %}
+      </div>
+
+      <div class="oauth-block">
+        <h3>Telegram</h3>
+        {% if user.telegram_id %}
+          <p>Привязан: <strong>@{{ user.telegram_username or user.telegram_id }}</strong></p>
+          <form method="post" action="/account/unlink/telegram">
+            <button type="submit" class="btn btn-ghost">Отвязать</button>
+          </form>
+        {% elif telegram_configured %}
+          <p class="muted">Нажмите кнопку ниже для привязки:</p>
+          <script async src="https://telegram.org/js/telegram-widget.js?22"
+            data-telegram-login="{{ telegram_bot_username }}"
+            data-size="large"
+            data-auth-url="{{ site.base_url }}/auth/telegram/callback"
+            data-request-access="write"></script>
+        {% else %}
+          <p class="muted">Telegram не настроен (TASKA_TELEGRAM_BOT_TOKEN)</p>
+        {% endif %}
+      </div>
+
+      <h2>Мои теги</h2>
+      <div class="tag-list">
+        {% for tag in user.tags %}
+          <span class="tag">{{ tag.name }}</span>
+        {% else %}
+          <span class="muted">Теги не назначены</span>
+        {% endfor %}
+      </div>
+      <p><a href="/profiles/{{ user.username }}">Предложить тег →</a></p>
+    </div>
+  </div>
+</section>
+{% endblock %}

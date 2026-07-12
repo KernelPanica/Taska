@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Проекты — {{ site.app_name }}{% endblock %}
+
+{% block content %}
+<section>
+  <div class="section-header">
+    <div>
+      <h1>Проекты</h1>
+      <p class="muted">Все проекты команды и их задачи.</p>
+    </div>
+  </div>
+
+  {% if is_pm %}
+    <form method="post" action="/projects" class="card form create-form">
+      <h2>Новый проект</h2>
+      <label>
+        Название
+        <input type="text" name="name" required>
+      </label>
+      <label>
+        Описание
+        <textarea name="description" rows="3" placeholder="Кратко о проекте"></textarea>
+      </label>
+      <button type="submit" class="btn btn-primary">Создать проект</button>
+    </form>
+  {% endif %}
+
+  <div class="profiles-grid">
+    {% for project in projects %}
+      <a href="/projects/{{ project.id }}" class="profile-card">
+        <h2>{{ project.name }}</h2>
+        <p class="muted">{{ project.description or "Без описания" }}</p>
+        <p class="muted">Задач: {{ project.tasks|length }}</p>
+      </a>
+    {% else %}
+      <p class="muted">Проектов пока нет.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

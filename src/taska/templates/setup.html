@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Первоначальная настройка — Taska</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <main class="container main">
+    <section class="card setup-card">
+      <p class="setup-badge">Первый запуск</p>
+      <h1>Добро пожаловать в Taska</h1>
+      <p class="muted">
+        База данных пуста. Создайте учётную запись администратора и задайте базовые параметры сайта.
+      </p>
+
+      {% if error %}
+        <div class="alert alert-error">{{ error }}</div>
+      {% endif %}
+
+      <form method="post" action="/setup" class="form setup-form">
+        <fieldset class="form-section">
+          <legend>Организация</legend>
+          <label>
+            Название команды / организации
+            <input type="text" name="organization_name" placeholder="Например, Acme Dev Team" required autofocus>
+          </label>
+          <label>
+            Название сайта
+            <input type="text" name="app_name" value="{{ defaults.app_name }}" placeholder="Taska">
+          </label>
+          <label>
+            Базовый URL (для ссылок-приглашений)
+            <input type="url" name="base_url" value="{{ defaults.base_url }}" placeholder="http://localhost:8000">
+          </label>
+        </fieldset>
+
+        <fieldset class="form-section">
+          <legend>Администратор</legend>
+          <label>
+            Логин
+            <input type="text" name="admin_username" autocomplete="username" required>
+          </label>
+          <label>
+            Пароль
+            <input type="password" name="admin_password" autocomplete="new-password" minlength="8" required>
+          </label>
+          <label>
+            Подтверждение пароля
+            <input type="password" name="admin_password_confirm" autocomplete="new-password" minlength="8" required>
+          </label>
+        </fieldset>
+
+        <button type="submit" class="btn btn-primary btn-block">Завершить настройку</button>
+      </form>
+    </section>
+  </main>
+</body>
+</html>

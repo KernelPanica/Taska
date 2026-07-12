@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}{{ profile.display_name or profile.username }} — {{ site.app_name }}{% endblock %}
+
+{% block content %}
+<section>
+  <p><a href="/profiles">← Все профили</a></p>
+
+  {% if success %}
+    <div class="alert alert-success">{{ success }}</div>
+  {% endif %}
+  {% if error %}
+    <div class="alert alert-error">{{ error }}</div>
+  {% endif %}
+
+  <div class="profile-detail card">
+    <div class="profile-detail-header">
+      <div>
+        <h1>{{ profile.display_name or profile.username }}</h1>
+        <p class="muted">@{{ profile.username }}</p>
+      </div>
+      <div class="profile-meta">
+        <span class="badge badge-active">{{ position_label }}</span>
+        {% if profile.experience_years is not none %}
+          <span class="badge">Стаж: {{ profile.experience_years }} лет</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <h2>Теги и навыки</h2>
+    <div class="tag-list tag-list-large">
+      {% for tag in profile.tags %}
+        <span class="tag">
+          {{ tag.name }}
+          {% if is_admin %}
+            <form action="/profiles/{{ profile.username }}/tags/{{ tag.id }}/remove" method="post" class="inline-form">
+              <button type="submit" class="tag-remove" title="Удалить тег">×</button>
+            </form>
+          {% endif %}
+        </span>
+      {% else %}
+        <p class="muted">Теги пока не назначены.</p>
+      {% endfor %}
+    </div>
+
+    {% if is_own_profile %}
+      <div class="card inner-card">
+        <h3>Предложить тег / навык</h3>
+        <p class="muted">Предложение уйдёт администратору на рассмотрение.</p>
+        <form method="post" action="/profiles/{{ profile.username }}/suggest-tag" class="form form-inline-row">
+          <input type="text" name="tag_name" placeholder="Например, Python, React, CI/CD" required>
+          <button type="submit" class="btn btn-primary">Предложить</button>
+        </form>
+      </div>
+    {% endif %}
+
+    {% if is_admin %}
+      <div class="card inner-card">
+        <h3>Назначить тег (админ)</h3>
+        <form method="post" action="/profiles/{{ profile.username }}/tags" class="form form-inline-row">
+          <input type="text" name="tag_name" list="existing-tags" placeholder="Новый или существующий тег" required>
+          <datalist id="existing-tags">
+            {% for tag in all_tags %}
+              <option value="{{ tag.name }}">
+            {% endfor %}
+          </datalist>
+          <button type="submit" class="btn btn-primary">Назначить</button>
+        </form>
+      </div>
+
+      {% if pending_suggestions %}
+        <div class="card inner-card">
+          <h3>Ожидают рассмотрения</h3>
+          <ul class="suggestion-list">
+            {% for suggestion in pending_suggestions %}
+              <li>
+                <span class="tag tag-pending">{{ suggestion.tag_name }}</span>
+                <form action="/profiles/{{ profile.username }}/suggestions/{{ suggestion.id }}/approve" method="post" class="inline-form">
+                  <button type="submit" class="btn btn-primary btn-sm">Одобрить</button>
+                </form>
+                <form action="/profiles/{{ profile.username }}/suggestions/{{ suggestion.id }}/reject" method="post" class="inline-form">
+                  <button type="submit" class="btn btn-ghost btn-sm">Отклонить</button>
+                </form>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

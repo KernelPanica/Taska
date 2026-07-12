@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Панель администратора — Taska{% endblock %}
+
+{% block content %}
+<section>
+  <h1>Панель администратора</h1>
+  {% if site.organization_name %}
+    <p class="muted">{{ site.organization_name }}</p>
+  {% endif %}
+  <p class="muted">Управление приглашениями и токенами участников команды.</p>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <span class="stat-value">{{ stats.users_count }}</span>
+      <span class="stat-label">Пользователей</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value">{{ stats.invitations_count }}</span>
+      <span class="stat-label">Приглашений всего</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value">{{ stats.active_invitations }}</span>
+      <span class="stat-label">Активных ссылок</span>
+    </div>
+  </div>
+
+  <div class="actions-grid">
+    <a href="/admin/invitations" class="action-card">
+      <h3>Приглашения</h3>
+      <p>Генерация ссылок для регистрации новых участников.</p>
+    </a>
+    <a href="/admin/tokens" class="action-card">
+      <h3>Токены</h3>
+      <p>Создание читаемых крипто-токенов формата B-S_1_*...*</p>
+    </a>
+  </div>
+</section>
+{% endblock %}

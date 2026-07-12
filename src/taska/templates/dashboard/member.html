@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Дашборд — {{ site.app_name }}{% endblock %}
+
+{% block content %}
+<section class="dashboard">
+  <div class="dashboard-hero">
+    <div>
+      <h1>Привет, {{ dashboard.display_name }}</h1>
+      <p class="muted">{{ dashboard.position_label }}{% if dashboard.experience_years is not none %} · {{ dashboard.experience_years }} лет{% endif %}</p>
+    </div>
+    <a href="/account" class="btn btn-primary">Мой профиль</a>
+  </div>
+
+  <div class="dashboard-tabs">
+    <a href="/" class="dashboard-tab active">Обзор</a>
+    <a href="/projects" class="dashboard-tab">Проекты</a>
+    <a href="/profiles" class="dashboard-tab">Штат</a>
+    <a href="/account" class="dashboard-tab">Настройки</a>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <span class="stat-value">{{ dashboard.active_tasks_count }}</span>
+      <span class="stat-label">Активных задач</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value">{{ dashboard.done_tasks_count }}</span>
+      <span class="stat-label">Завершено</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value">{{ dashboard.tags_count }}</span>
+      <span class="stat-label">Тегов / навыков</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value">{{ dashboard.pending_applications }}</span>
+      <span class="stat-label">Заявок на задачи</span>
+    </div>
+  </div>
+
+  <div class="split-layout">
+    <div class="card">
+      <h2>Текущая задача</h2>
+      {% if dashboard.current_task %}
+        <h3><a href="/projects/{{ dashboard.current_task.project_id }}/tasks/{{ dashboard.current_task.id }}">{{ dashboard.current_task.title }}</a></h3>
+        <span class="status-badge status-{{ dashboard.current_task.status }}">{{ statuses[dashboard.current_task.status] }}</span>
+      {% else %}
+        <p class="muted">Нет активных задач. <a href="/projects">Посмотреть проекты</a></p>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <h2>Мои навыки</h2>
+      <div class="tag-list">
+        {% for tag in dashboard.tags %}
+          <span class="tag">{{ tag.name }}</span>
+        {% else %}
+          <p class="muted">Теги не назначены. <a href="/account">Профиль</a></p>
+        {% endfor %}
+      </div>
+      {% if dashboard.pending_tag_suggestions %}
+        <p class="muted">Ожидают рассмотрения: {{ dashboard.pending_tag_suggestions }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if dashboard.recent_tasks %}
+    <div class="card">
+      <h2>Недавние задачи</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Задача</th><th>Статус</th></tr>
+          </thead>
+          <tbody>
+            {% for task in dashboard.recent_tasks %}
+              <tr>
+                <td><a href="/projects/{{ task.project_id }}/tasks/{{ task.id }}">{{ task.title }}</a></td>
+                <td><span class="status-badge status-{{ task.status }}">{{ statuses[task.status] }}</span></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

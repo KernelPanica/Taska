@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Приглашения — Taska{% endblock %}
+
+{% block content %}
+<section>
+  <h1>Генератор ссылок-приглашений</h1>
+  <p class="muted">Ссылка действует 7 дней и может быть использована один раз.</p>
+
+  <form method="post" action="/admin/invitations" class="form-inline">
+    <button type="submit" class="btn btn-primary">Создать приглашение</button>
+  </form>
+
+  {% if created %}
+    <div class="alert alert-success">
+      Новое приглашение создано. Скопируйте ссылку из таблицы ниже.
+    </div>
+  {% endif %}
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Ссылка</th>
+          <th>Создано</th>
+          <th>Истекает</th>
+          <th>Статус</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in invitations %}
+          <tr>
+            <td><code class="link-code">{{ item.url }}</code></td>
+            <td>{{ item.invitation.created_at.strftime('%d.%m.%Y %H:%M') if item.invitation.created_at else '—' }}</td>
+            <td>{{ item.invitation.expires_at.strftime('%d.%m.%Y %H:%M') if item.invitation.expires_at else '—' }}</td>
+            <td>
+              {% if item.invitation.used_at %}
+                <span class="badge badge-used">Использовано</span>
+              {% else %}
+                <span class="badge badge-active">Активно</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="4" class="muted">Приглашений пока нет</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

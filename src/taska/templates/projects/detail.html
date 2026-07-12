@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.name }} — {{ site.app_name }}{% endblock %}
+
+{% block content %}
+<section>
+  <p><a href="/projects">← Все проекты</a></p>
+
+  {% if success %}
+    <div class="alert alert-success">{{ success }}</div>
+  {% endif %}
+  {% if error %}
+    <div class="alert alert-error">{{ error }}</div>
+  {% endif %}
+
+  <div class="profile-detail card">
+    <h1>{{ project.name }}</h1>
+    <p class="muted">{{ project.description or "Без описания" }}</p>
+  </div>
+
+  {% if is_pm %}
+    <div class="card inner-card">
+      <h2>Новая задача</h2>
+      <form method="post" action="/projects/{{ project.id }}/tasks" class="form">
+        <label>
+          Название задачи
+          <input type="text" name="title" required>
+        </label>
+        <label>
+          Описание
+          <textarea name="description" rows="3"></textarea>
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" name="enforce_single_task" checked>
+          Одна активная задача на исполнителя
+        </label>
+        {% if all_tags %}
+          <fieldset class="form-section">
+            <legend>Требуемые теги</legend>
+            <div class="tag-checkboxes">
+              {% for tag in all_tags %}
+                <label class="checkbox">
+                  <input type="checkbox" name="required_tag_ids" value="{{ tag.id }}">
+                  {{ tag.name }}
+                </label>
+              {% endfor %}
+            </div>
+          </fieldset>
+        {% else %}
+          <p class="muted">Тегов пока нет — задача будет доступна всем.</p>
+        {% endif %}
+        <button type="submit" class="btn btn-primary">Создать задачу</button>
+      </form>
+    </div>
+  {% endif %}
+
+  <h2>Задачи</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Задача</th>
+          <th>Статус</th>
+          <th>Исполнитель</th>
+          <th>Теги</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for task in project.tasks %}
+          <tr>
+            <td><a href="/projects/{{ project.id }}/tasks/{{ task.id }}">{{ task.title }}</a></td>
+            <td><span class="status-badge status-{{ task.status }}">{{ statuses[task.status] }}</span></td>
+            <td>{{ task.assignee.display_name or task.assignee.username if task.assignee else "—" }}</td>
+            <td>
+              {% for tag in task.required_tags %}
+                <span class="tag">{{ tag.name }}</span>
+              {% else %}
+                <span class="muted">—</span>
+              {% endfor %}
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="4" class="muted">Задач пока нет</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

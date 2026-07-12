@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}{{ task.title }} — {{ site.app_name }}{% endblock %}
+
+{% block content %}
+<section>
+  <p><a href="/projects/{{ project.id }}">← {{ project.name }}</a></p>
+
+  {% if success %}
+    <div class="alert alert-success">{{ success }}</div>
+  {% endif %}
+  {% if error %}
+    <div class="alert alert-error">{{ error }}</div>
+  {% endif %}
+
+  <div class="profile-detail card">
+    <div class="profile-detail-header">
+      <div>
+        <h1>{{ task.title }}</h1>
+        <p class="muted">Проект: {{ project.name }}</p>
+      </div>
+      <span class="status-badge status-{{ task.status }}">{{ statuses[task.status] }}</span>
+    </div>
+
+    <p>{{ task.description or "Без описания" }}</p>
+
+    <dl class="token-details">
+      <dt>Исполнитель</dt>
+      <dd>{{ task.assignee.display_name or task.assignee.username if task.assignee else "Не назначен" }}</dd>
+      <dt>Требуемые теги</dt>
+      <dd>
+        {% for tag in task.required_tags %}
+          <span class="tag">{{ tag.name }}</span>
+        {% else %}
+          <span class="muted">Не требуются</span>
+        {% endfor %}
+      </dd>
+      <dt>Ограничение</dt>
+      <dd>{{ "Одна активная задача" if task.enforce_single_task else "Без ограничения" }}</dd>
+    </dl>
+
+    {% if can_apply %}
+      <form method="post" action="/projects/{{ project.id }}/tasks/{{ task.id }}/apply">
+        <button type="submit" class="btn btn-primary">Подать заявку на задачу</button>
+      </form>
+    {% elif not user.is_admin and task.status == 'unassigned' and task.assignee_id is none %}
+      <p class="muted">Для заявки нужны все требуемые теги в вашем профиле.</p>
+    {% endif %}
+  </div>
+
+  {% if is_pm %}
+    <div class="card inner-card">
+      <h2>Управление статусом</h2>
+      <form method="post" action="/projects/{{ project.id }}/tasks/{{ task.id }}/status" class="form-inline-row">
+        <select name="status">
+          {% for code, label in statuses.items() %}
+            <option value="{{ code }}" {% if task.status == code %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-primary">Обновить</button>
+      </form>
+    </div>
+
+    {% if pending_applications %}
+      <div class="card inner-card">
+        <h2>Заявки на задачу</h2>
+        <ul class="suggestion-list">
+          {% for app in pending_applications %}
+            <li>
+              <strong>{{ app.user.display_name or app.user.username }}</strong>
+              <form action="/projects/{{ project.id }}/tasks/{{ task.id }}/applications/{{ app.id }}/approve" method="post" class="inline-form">
+                <button type="submit" class="btn btn-primary btn-sm">Одобрить</button>
+              </form>
+              <form action="/projects/{{ project.id }}/tasks/{{ task.id }}/applications/{{ app.id }}/reject" method="post" class="inline-form">
+                <button type="submit" class="btn btn-ghost btn-sm">Отклонить</button>
+              </form>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+  {% endif %}
+</section>
+{% endblock %}

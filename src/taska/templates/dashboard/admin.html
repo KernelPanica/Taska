@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Дашборд — {{ site.app_name }}{% endblock %}
+
+{% block content %}
+<section class="dashboard">
+  <div class="dashboard-hero">
+    <div>
+      <h1>Панель администратора</h1>
+      <p class="muted">{{ site.organization_name or site.app_name }}</p>
+    </div>
+    <a href="/admin" class="btn btn-primary">Управление</a>
+  </div>
+
+  <div class="dashboard-tabs">
+    <a href="/" class="dashboard-tab active">Обзор</a>
+    <a href="/admin" class="dashboard-tab">Админка</a>
+    <a href="/profiles" class="dashboard-tab">Штат</a>
+    <a href="/projects" class="dashboard-tab">Проекты</a>
+    <a href="/account" class="dashboard-tab">Профиль</a>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <span class="stat-value">{{ stats.users_count }}</span>
+      <span class="stat-label">Пользователей</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value">{{ stats.invitations_count }}</span>
+      <span class="stat-label">Приглашений</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value">{{ stats.active_invitations }}</span>
+      <span class="stat-label">Активных ссылок</span>
+    </div>
+  </div>
+
+  <div class="actions-grid">
+    <a href="/admin/invitations" class="action-card"><h3>Приглашения</h3><p>Создание ссылок для новых участников</p></a>
+    <a href="/admin/tokens" class="action-card"><h3>Токены</h3><p>Генерация токенов участников</p></a>
+    <a href="/projects" class="action-card"><h3>Проекты</h3><p>Задачи и проекты команды</p></a>
+    <a href="/profiles" class="action-card"><h3>Штат</h3><p>Профили и навыки сотрудников</p></a>
+  </div>
+</section>
+{% endblock %}

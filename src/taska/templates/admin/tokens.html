@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Генератор токенов — {{ site.app_name }}{% endblock %}
+
+{% block content %}
+<section>
+  <h1>Генератор крипто-токенов</h1>
+  <p class="muted">
+    Формат: <code>ДОЛЖНОСТЬ-ГРЕЙДСТАЖ_шифрФИО</code> — например <code>PM-S1_gAAAAA...</code>
+  </p>
+
+  {% if error %}
+    <div class="alert alert-error">{{ error }}</div>
+  {% endif %}
+
+  <div class="split-layout">
+    <form method="post" action="/admin/tokens" class="card form">
+      <h2>Новый токен</h2>
+
+      <label>
+        Должность
+        <select name="position_code" required>
+          {% for code, label in positions.items() %}
+            <option value="{{ code }}">{{ code }} — {{ label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label>
+        Стаж (лет)
+        <input type="number" name="experience_years" min="0" max="50" value="1" required>
+      </label>
+
+      <label>
+        ФИО сотрудника
+        <input type="text" name="full_name" placeholder="Иванов Иван" required>
+      </label>
+
+      <button type="submit" class="btn btn-primary">Сгенерировать</button>
+    </form>
+
+    <div class="card">
+      <h2>Результат</h2>
+      {% if generated %}
+        <p class="muted">Сгенерированный токен:</p>
+        <code class="token-display">{{ generated }}</code>
+
+        {% if parsed %}
+          <dl class="token-details">
+            <dt>Должность</dt>
+            <dd>{{ parsed.position_label }} ({{ parsed.position_code }})</dd>
+            <dt>Стаж</dt>
+            <dd>{{ parsed.experience_years }} лет</dd>
+            <dt>ФИО (расшифровано)</dt>
+            <dd>{{ parsed.full_name }}</dd>
+          </dl>
+        {% endif %}
+      {% else %}
+        <p class="muted">Заполните форму слева, чтобы получить токен.</p>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

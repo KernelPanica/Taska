@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Регистрация — Taska{% endblock %}
+
+{% block content %}
+<section class="card card-narrow">
+  <h1>Регистрация по приглашению</h1>
+
+  {% if not invitation %}
+    <div class="alert alert-error">Ссылка-приглашение недействительна или уже использована.</div>
+    <p><a href="/login">Перейти ко входу</a></p>
+  {% else %}
+    <p class="muted">Создайте аккаунт и укажите токен, выданный администратором.</p>
+
+    {% if error %}
+      <div class="alert alert-error">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" action="/invite/{{ token }}" class="form">
+      <label>
+        Логин
+        <input type="text" name="username" required autofocus autocomplete="username">
+      </label>
+      <label>
+        Пароль
+        <input type="password" name="password" required autocomplete="new-password">
+      </label>
+      <label>
+        Токен участника
+        <input type="text" name="member_token" placeholder="PM-S1_..." required>
+      </label>
+      <button type="submit" class="btn btn-primary btn-block">Зарегистрироваться</button>
+    </form>
+  {% endif %}
+</section>
+{% endblock %}

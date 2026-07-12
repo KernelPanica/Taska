@@ -1,0 +1,1 @@
+1. Registration admin kay after deploy not a flag triggered setup

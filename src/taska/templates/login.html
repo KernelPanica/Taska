@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Вход — {{ site.app_name }}{% endblock %}
+
+{% block content %}
+<section class="card card-narrow login-card">
+  <h1>Вход</h1>
+  <p class="muted">Логин и пароль или привязанные GitHub / Telegram.</p>
+
+  {% if error %}
+    <div class="alert alert-error">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" action="/login" class="form">
+    <label>
+      Логин
+      <input type="text" name="username" required autofocus autocomplete="username">
+    </label>
+    <label>
+      Пароль
+      <input type="password" name="password" required autocomplete="current-password">
+    </label>
+    <button type="submit" class="btn btn-primary btn-block">Войти</button>
+  </form>
+
+  {% if github_configured or telegram_configured %}
+    <div class="oauth-divider"><span>или</span></div>
+
+    <div class="oauth-login-buttons">
+      {% if github_configured %}
+        <a href="/auth/github" class="btn btn-oauth btn-github btn-block">Войти через GitHub</a>
+      {% endif %}
+      {% if telegram_configured %}
+        <div class="telegram-login-wrap">
+          <script async src="https://telegram.org/js/telegram-widget.js?22"
+            data-telegram-login="{{ telegram_bot_username }}"
+            data-size="large"
+            data-auth-url="{{ site.base_url }}/auth/telegram/callback"
+            data-request-access="write"></script>
+        </div>
+      {% endif %}
+    </div>
+    <p class="muted oauth-hint">Сначала привяжите аккаунт в профиле после входа по паролю.</p>
+  {% endif %}
+</section>
+{% endblock %}

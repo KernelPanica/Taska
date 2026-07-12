@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ site.app_name if site is defined else 'Taska' }}{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <header class="header">
+    <div class="container header-inner">
+      <a href="/" class="logo">{{ site.app_name if site is defined else 'Taska' }}</a>
+      <nav class="nav">
+        {% if user %}
+          <a href="/">Дашборд</a>
+          <a href="/account">Профиль</a>
+          <a href="/profiles">Штат организации</a>
+          <a href="/projects">Проекты</a>
+        {% endif %}
+        {% if user and user.is_admin %}
+          <a href="/admin">Панель</a>
+          <a href="/admin/invitations">Приглашения</a>
+          <a href="/admin/tokens">Токены</a>
+        {% endif %}
+        {% if user %}
+          <form action="/logout" method="post" class="inline-form">
+            <button type="submit" class="btn btn-ghost">Выйти ({{ user.username }})</button>
+          </form>
+        {% else %}
+          <a href="/login" class="btn btn-primary">Войти</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  <main class="container main">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
