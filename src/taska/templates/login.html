@@ -42,5 +42,12 @@
     </div>
     <p class="muted oauth-hint">Сначала привяжите аккаунт в профиле после входа по паролю.</p>
   {% endif %}
+  <div class="oauth-divider"><span>passkey</span></div>
+  <button type="button" class="btn btn-oauth btn-block" data-passkey-login hidden>
+    Войти по отпечатку / Windows Hello
+  </button>
+  <p class="alert alert-error passkey-error" data-passkey-error></p>
 </section>
 {% endblock %}
+
+{% block scripts %}<script src="/static/js/passkeys.js" defer></script>{% endblock %}

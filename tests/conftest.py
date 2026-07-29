@@ -7,6 +7,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from taska.auth.security import hash_password
+from taska.config import get_settings
 from taska.database import Base, get_db
 from taska.main import app
 from taska.models.user import User
@@ -15,6 +16,15 @@ from taska.services.token_generator import build_member_token
 os.environ.setdefault("TASKA_DATABASE_URL", "sqlite://")
 os.environ.setdefault("TASKA_SECRET_KEY", "test-secret-key-for-tests")
 os.environ.setdefault("TASKA_BASE_URL", "http://localhost:8000")
+
+
+@pytest.fixture(autouse=True)
+def test_security_settings():
+    settings = get_settings()
+    original_setup_key = settings.setup_key
+    settings.setup_key = "test-setup-key-that-is-at-least-32-characters-long"
+    yield
+    settings.setup_key = original_setup_key
 
 
 def _create_test_engine():

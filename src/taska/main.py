@@ -10,7 +10,7 @@ from starlette.responses import Response
 
 from taska import __version__
 from taska.config import get_settings
-from taska.routes import account, admin, auth, dashboard, invite, oauth, profiles, projects, setup
+from taska.routes import account, admin, auth, dashboard, invite, oauth, passkeys, profiles, projects, setup
 from taska.services.bootstrap import init_db
 from taska.services.setup import is_setup_required
 
@@ -59,6 +59,7 @@ app.add_middleware(SetupRequiredMiddleware)
 app.include_router(setup.router)
 app.include_router(auth.router)
 app.include_router(oauth.router)
+app.include_router(passkeys.router)
 app.include_router(dashboard.router)
 app.include_router(account.router)
 app.include_router(profiles.router)

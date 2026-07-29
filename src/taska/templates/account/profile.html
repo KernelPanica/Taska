@@ -93,6 +93,25 @@
         {% endif %}
       </div>
 
+      <div class="oauth-block">
+        <h3>Passkeys</h3>
+        <p class="muted">Вход через Windows Hello, отпечаток пальца Android или аппаратный ключ.</p>
+        <button type="button" class="btn btn-oauth" data-passkey-register hidden>
+          Добавить passkey
+        </button>
+        <p class="alert alert-error passkey-error" data-passkey-error></p>
+        <div class="passkey-list">
+          {% for passkey in passkeys %}
+            <div class="passkey-item">
+              <span><strong>{{ passkey.name }}</strong><br><small>{{ passkey.created_at }}</small></span>
+              <button type="button" class="btn btn-ghost" data-passkey-delete="{{ passkey.id }}">Удалить</button>
+            </div>
+          {% else %}
+            <p class="muted">Passkey пока не добавлены.</p>
+          {% endfor %}
+        </div>
+      </div>
+
       <h2>Мои теги</h2>
       <div class="tag-list">
         {% for tag in user.tags %}
@@ -106,3 +125,5 @@
   </div>
 </section>
 {% endblock %}
+
+{% block scripts %}<script src="/static/js/passkeys.js" defer></script>{% endblock %}

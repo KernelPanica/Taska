@@ -8,7 +8,7 @@ from fastapi import Request
 from fastapi.responses import RedirectResponse
 
 from taska.auth.dependencies import COOKIE_NAME
-from taska.auth.security import create_access_token
+from taska.auth.security import create_access_token, create_oauth_link_token
 from taska.config import get_settings
 
 GITHUB_AUTHORIZE_URL = "https://github.com/login/oauth/authorize"
@@ -43,7 +43,13 @@ def start_github_oauth(*, link_username: str | None = None) -> RedirectResponse:
     response = RedirectResponse(f"{GITHUB_AUTHORIZE_URL}?{urlencode(params)}", status_code=303)
     response.set_cookie(OAUTH_STATE_COOKIE, state, httponly=True, samesite="lax", max_age=600)
     if link_username:
-        response.set_cookie(LINK_USER_COOKIE, link_username, httponly=True, samesite="lax", max_age=600)
+        response.set_cookie(
+            LINK_USER_COOKIE,
+            create_oauth_link_token(link_username),
+            httponly=True,
+            samesite="lax",
+            max_age=600,
+        )
     return response
 
 

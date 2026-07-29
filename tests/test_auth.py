@@ -28,6 +28,7 @@ def test_complete_initial_setup(empty_client):
             "admin_username": "owner",
             "admin_password": "securepass",
             "admin_password_confirm": "securepass",
+            "setup_key": "test-setup-key-that-is-at-least-32-characters-long",
         },
         follow_redirects=False,
     )
@@ -40,6 +41,22 @@ def test_complete_initial_setup(empty_client):
     assert "Acme Team" in response.text
 
 
+def test_initial_setup_rejects_wrong_deployment_key(empty_client):
+    response = empty_client.post(
+        "/setup",
+        data={
+            "organization_name": "Acme Team",
+            "admin_username": "owner",
+            "admin_password": "securepass",
+            "admin_password_confirm": "securepass",
+            "setup_key": "wrong-key",
+        },
+        follow_redirects=False,
+    )
+    assert response.status_code == 303
+    assert "error=" in response.headers["location"]
+
+
 def test_setup_not_available_after_users_exist(client):
     response = client.get("/setup", follow_redirects=False)
     assert response.status_code == 303
@@ -50,6 +67,13 @@ def test_login_page(client):
     response = client.get("/login")
     assert response.status_code == 200
     assert "Вход" in response.text
+
+
+def test_passkey_login_options(client):
+    response = client.post("/auth/passkey/login/options")
+    assert response.status_code == 200
+    assert response.json()["rpId"] == "localhost"
+    assert response.cookies.get("taska_webauthn_challenge")
 
 
 def test_admin_login_and_panel(client):

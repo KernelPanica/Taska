@@ -15,6 +15,13 @@ def test_account_page(client, member_user):
     assert "Мой профиль" in response.text
 
 
+def test_passkey_registration_options(member_client):
+    response = member_client.post("/auth/passkey/register/options")
+    assert response.status_code == 200
+    assert response.json()["rp"]["id"] == "localhost"
+    assert response.json()["user"]["name"] == "dev1"
+
+
 def test_account_update(client, member_user):
     client.post("/login", data={"username": "dev1", "password": "memberpass"})
 

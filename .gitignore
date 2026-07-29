@@ -32,6 +32,10 @@ env/
 .env
 .env.local
 .env.*.local
+.env.quick-start
+
+# Local instructions for AI coding agents
+AGENTS.md
 
 # IDE
 .idea/

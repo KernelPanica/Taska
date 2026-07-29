@@ -15,9 +15,15 @@ from taska.auth.oauth import (
     validate_oauth_state,
     verify_telegram_auth,
 )
+from taska.auth.security import decode_oauth_link_token
 from taska.database import get_db
 from taska.models.user import User
-from taska.services.account import find_user_by_github, find_user_by_telegram, link_github, link_telegram
+from taska.services.account import (
+    find_user_by_github,
+    find_user_by_telegram,
+    link_github,
+    link_telegram,
+)
 
 router = APIRouter(prefix="/auth", tags=["oauth"])
 
@@ -42,13 +48,15 @@ async def github_callback(
     try:
         github_user = await exchange_github_code(code)
     except Exception:
-        response = RedirectResponse("/login?error=Не+удалось+авторизоваться+через+GitHub", status_code=303)
+        response = RedirectResponse(
+            "/login?error=Не+удалось+авторизоваться+через+GitHub", status_code=303
+        )
         return clear_oauth_cookies(response)
 
     github_id = int(github_user["id"])
     github_username = github_user.get("login", "")
 
-    link_username = request.cookies.get(LINK_USER_COOKIE)
+    link_username = decode_oauth_link_token(request.cookies.get(LINK_USER_COOKIE, ""))
     if link_username:
         user = db.scalar(select(User).where(User.username == link_username))
         if user is None:
@@ -85,7 +93,7 @@ async def telegram_callback(request: Request, db: Session = Depends(get_db)):
     telegram_id = int(data["id"])
     telegram_username = data.get("username") or None
 
-    link_username = request.cookies.get(LINK_USER_COOKIE)
+    link_username = decode_oauth_link_token(request.cookies.get(LINK_USER_COOKIE, ""))
     if link_username:
         user = db.scalar(select(User).where(User.username == link_username))
         if user is None:

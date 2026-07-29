@@ -16,6 +16,11 @@ class Settings(BaseSettings):
     secret_key: str = "change-me-in-production"
     database_url: str = "sqlite:///./taska.db"
     base_url: str = "http://localhost:8000"
+    setup_key: str = ""
+
+    webauthn_rp_id: str = "localhost"
+    webauthn_rp_name: str = "Taska"
+    webauthn_origin: str = "http://localhost:8000"
 
     github_client_id: str = ""
     github_client_secret: str = ""

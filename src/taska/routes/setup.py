@@ -1,3 +1,4 @@
+import hmac
 from pathlib import Path
 from urllib.parse import quote, unquote
 
@@ -44,6 +45,7 @@ def setup_submit(
     admin_username: str = Form(...),
     admin_password: str = Form(...),
     admin_password_confirm: str = Form(...),
+    setup_key: str = Form(""),
     db: Session = Depends(get_db),
 ) -> RedirectResponse:
     if not is_setup_required(db):
@@ -52,6 +54,14 @@ def setup_submit(
     if admin_password != admin_password_confirm:
         return RedirectResponse(
             f"/setup?error={quote('Пароли не совпадают')}",
+            status_code=303,
+        )
+
+    settings = get_settings()
+    configured_key = settings.setup_key.strip()
+    if len(configured_key) < 32 or not hmac.compare_digest(setup_key, configured_key):
+        return RedirectResponse(
+            f"/setup?error={quote('Неверный ключ первоначальной настройки')}",
             status_code=303,
         )
 

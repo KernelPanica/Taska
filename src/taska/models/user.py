@@ -31,3 +31,6 @@ class User(Base):
         foreign_keys="TagSuggestion.user_id",
         back_populates="user",
     )
+    passkeys: Mapped[list["PasskeyCredential"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )

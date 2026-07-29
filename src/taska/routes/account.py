@@ -9,9 +9,10 @@ from sqlalchemy.orm import Session, selectinload
 
 from taska.auth.dependencies import get_current_user
 from taska.auth.oauth import github_configured, start_github_oauth, telegram_configured
-from taska.auth.security import hash_password, verify_password
+from taska.auth.security import create_oauth_link_token, hash_password, verify_password
 from taska.config import get_settings
 from taska.database import get_db
+from taska.models.passkey import PasskeyCredential
 from taska.models.user import User
 from taska.services.account import unlink_github, unlink_telegram, update_user_profile
 from taska.services.bootstrap import get_site_context
@@ -44,8 +45,15 @@ def account_page(
     )
     site = get_site_context(db)
     settings = get_settings()
+    passkeys = list(
+        db.scalars(
+            select(PasskeyCredential)
+            .where(PasskeyCredential.user_id == current.id)
+            .order_by(PasskeyCredential.created_at.desc())
+        ).all()
+    )
 
-    return templates.TemplateResponse(
+    response = templates.TemplateResponse(
         request,
         "account/profile.html",
         {
@@ -55,10 +63,21 @@ def account_page(
             "github_configured": github_configured(),
             "telegram_configured": telegram_configured(),
             "telegram_bot_username": settings.telegram_bot_username,
+            "passkeys": passkeys,
             "success": unquote(success) if success else None,
             "error": unquote(error) if error else None,
         },
     )
+    from taska.auth.oauth import LINK_USER_COOKIE
+
+    response.set_cookie(
+        LINK_USER_COOKIE,
+        create_oauth_link_token(current.username),
+        httponly=True,
+        samesite="lax",
+        max_age=600,
+    )
+    return response
 
 
 @router.post("/account")
@@ -118,7 +137,13 @@ def account_link_telegram(user: User | None = Depends(get_current_user)):
     response = RedirectResponse("/account", status_code=303)
     from taska.auth.oauth import LINK_USER_COOKIE
 
-    response.set_cookie(LINK_USER_COOKIE, current.username, httponly=True, samesite="lax", max_age=600)
+    response.set_cookie(
+        LINK_USER_COOKIE,
+        create_oauth_link_token(current.username),
+        httponly=True,
+        samesite="lax",
+        max_age=600,
+    )
     return response
 
 
