@@ -6,7 +6,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from taska.auth.dependencies import COOKIE_NAME, get_current_user
+from taska.auth.dependencies import COOKIE_NAME
 from taska.auth.oauth import github_configured, telegram_configured
 from taska.auth.security import create_access_token, verify_password
 from taska.config import get_settings
@@ -24,6 +24,7 @@ def login_page(
     request: Request,
     db: Session = Depends(get_db),
     error: str | None = None,
+    success: str | None = None,
 ):
     if is_setup_required(db):
         return RedirectResponse("/setup", status_code=303)
@@ -35,6 +36,7 @@ def login_page(
         "login.html",
         {
             "error": error,
+            "success": success,
             "site": site,
             "user": None,
             "github_configured": github_configured(),

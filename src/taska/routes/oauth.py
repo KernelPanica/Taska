@@ -82,10 +82,13 @@ async def github_callback(
     return clear_oauth_cookies(response)
 
 
-@router.post("/telegram/callback")
+@router.api_route("/telegram/callback", methods=["GET", "POST"])
 async def telegram_callback(request: Request, db: Session = Depends(get_db)):
-    form = await request.form()
-    data = {k: str(v) for k, v in form.items()}
+    if request.method == "POST":
+        form = await request.form()
+        data = {k: str(v) for k, v in form.items()}
+    else:
+        data = dict(request.query_params)
 
     if not verify_telegram_auth(dict(data)):
         return RedirectResponse("/login?error=Неверные+данные+Telegram", status_code=303)

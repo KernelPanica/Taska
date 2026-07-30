@@ -12,6 +12,7 @@ from taska.config import get_settings
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_HOURS = 24
 WEBAUTHN_CHALLENGE_EXPIRE_MINUTES = 5
+SETUP_UNLOCK_EXPIRE_MINUTES = 15
 INVITATION_EXPIRE_DAYS = 7
 
 
@@ -87,6 +88,25 @@ def decode_oauth_link_token(token: str) -> str | None:
         return payload.get("sub")
     except JWTError:
         return None
+
+
+def create_setup_unlock_token() -> str:
+    settings = get_settings()
+    expire = datetime.now(UTC) + timedelta(minutes=SETUP_UNLOCK_EXPIRE_MINUTES)
+    return jwt.encode(
+        {"purpose": "initial-setup", "exp": expire},
+        settings.secret_key,
+        algorithm=ALGORITHM,
+    )
+
+
+def verify_setup_unlock_token(token: str) -> bool:
+    settings = get_settings()
+    try:
+        payload = jwt.decode(token, settings.secret_key, algorithms=[ALGORITHM])
+        return payload.get("purpose") == "initial-setup"
+    except JWTError:
+        return False
 
 
 def generate_invitation_token() -> str:

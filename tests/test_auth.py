@@ -1,4 +1,10 @@
+import hashlib
+import hmac
+import time
+
+from taska.auth.oauth import verify_telegram_auth
 from taska.auth.security import decrypt_full_name, encrypt_full_name, hash_password, verify_password
+from taska.config import get_settings
 from taska.services.token_generator import build_member_token, parse_member_token
 
 
@@ -20,6 +26,14 @@ def test_empty_db_redirects_to_setup(empty_client):
 
 def test_complete_initial_setup(empty_client):
     response = empty_client.post(
+        "/setup/unlock",
+        data={"setup_key": "test-setup-key-that-is-at-least-32-characters-long"},
+        follow_redirects=False,
+    )
+    assert response.status_code == 303
+    assert response.headers["location"] == "/setup"
+
+    response = empty_client.post(
         "/setup",
         data={
             "organization_name": "Acme Team",
@@ -28,12 +42,18 @@ def test_complete_initial_setup(empty_client):
             "admin_username": "owner",
             "admin_password": "securepass",
             "admin_password_confirm": "securepass",
-            "setup_key": "test-setup-key-that-is-at-least-32-characters-long",
         },
         follow_redirects=False,
     )
     assert response.status_code == 303
-    assert response.headers["location"] == "/admin"
+    assert response.headers["location"].startswith("/login?success=")
+
+    response = empty_client.post(
+        "/login",
+        data={"username": "owner", "password": "securepass"},
+        follow_redirects=False,
+    )
+    assert response.status_code == 303
 
     response = empty_client.get("/admin", follow_redirects=True)
     assert response.status_code == 200
@@ -43,18 +63,27 @@ def test_complete_initial_setup(empty_client):
 
 def test_initial_setup_rejects_wrong_deployment_key(empty_client):
     response = empty_client.post(
+        "/setup/unlock",
+        data={"setup_key": "wrong-key"},
+        follow_redirects=False,
+    )
+    assert response.status_code == 303
+    assert "error=" in response.headers["location"]
+
+
+def test_setup_form_requires_unlocked_cookie(empty_client):
+    response = empty_client.post(
         "/setup",
         data={
             "organization_name": "Acme Team",
             "admin_username": "owner",
             "admin_password": "securepass",
             "admin_password_confirm": "securepass",
-            "setup_key": "wrong-key",
         },
         follow_redirects=False,
     )
     assert response.status_code == 303
-    assert "error=" in response.headers["location"]
+    assert response.headers["location"] == "/setup"
 
 
 def test_setup_not_available_after_users_exist(client):
@@ -109,6 +138,27 @@ def test_password_hash():
     hashed = hash_password("secret")
     assert verify_password("secret", hashed)
     assert not verify_password("wrong", hashed)
+
+
+def test_telegram_login_signature_and_expiration():
+    settings = get_settings()
+    original_token = settings.telegram_bot_token
+    settings.telegram_bot_token = "123456:test-bot-token"
+    try:
+        data = {
+            "id": "123456789",
+            "username": "taska_user",
+            "auth_date": str(int(time.time())),
+        }
+        check_string = "\n".join(f"{key}={value}" for key, value in sorted(data.items()))
+        secret = hashlib.sha256(settings.telegram_bot_token.encode()).digest()
+        data["hash"] = hmac.new(secret, check_string.encode(), hashlib.sha256).hexdigest()
+        assert verify_telegram_auth(data)
+
+        data["auth_date"] = str(int(time.time()) - 601)
+        assert not verify_telegram_auth(data)
+    finally:
+        settings.telegram_bot_token = original_token
 
 
 def test_create_invitation(client):

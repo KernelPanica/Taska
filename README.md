@@ -19,7 +19,7 @@ sh quick-start.sh
 - соберёт Docker-образ и запустит приложение в фоне;
 - выведет адрес `/setup` и ключ создания первого администратора.
 
-Откройте [http://localhost:8000/setup](http://localhost:8000/setup) и используйте показанный скриптом setup-ключ. База SQLite хранится в Docker volume `taska-data` и сохраняется между перезапусками.
+Откройте [http://localhost:8000/setup](http://localhost:8000/setup) и используйте показанный скриптом setup-ключ. После проверки ключа откроется отдельная форма регистрации администратора и настройки организации. По завершении войдите под созданной учётной записью. База SQLite хранится в Docker volume `taska-data` и сохраняется между перезапусками.
 
 ```bash
 # Логи
@@ -80,7 +80,7 @@ python -m taska.main
 python -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
 
-После запуска откройте [http://localhost:8000](http://localhost:8000). При пустой базе приложение автоматически перенаправит на `/setup`. Создание первого администратора разрешено только при вводе deploy-ключа из окружения. Заполните организацию, URL приложения и данные администратора (пароль — минимум 8 символов). База и таблицы создаются при старте приложения.
+После запуска откройте [http://localhost:8000](http://localhost:8000). При пустой базе приложение автоматически перенаправит на `/setup`. Сначала введите deploy-ключ из окружения. После его проверки приложение на 15 минут откроет отдельную форму организации и регистрации администратора (пароль — минимум 8 символов). По завершении войдите через обычную страницу авторизации. База и таблицы создаются при старте приложения.
 
 Также доступна консольная команда, установленная из `pyproject.toml`:
 
@@ -109,10 +109,12 @@ uvicorn taska.main:app --host 0.0.0.0 --port 8000
 | `TASKA_WEBAUTHN_RP_ID` | домен WebAuthn без схемы и порта | `localhost` |
 | `TASKA_WEBAUTHN_RP_NAME` | имя сервиса в диалоге passkey | `Taska` |
 | `TASKA_WEBAUTHN_ORIGIN` | точный origin приложения для проверки passkey | `http://localhost:8000` |
-| `TASKA_GITHUB_CLIENT_ID` / `TASKA_GITHUB_CLIENT_SECRET` | GitHub OAuth | пусто |
-| `TASKA_TELEGRAM_BOT_TOKEN` / `TASKA_TELEGRAM_BOT_USERNAME` | Telegram Login Widget | пусто |
+| `TASKA_GITHUB_CLIENT_ID` / `TASKA_GITHUB_CLIENT_SECRET` | GitHub OAuth для входа и привязки аккаунта | пусто |
+| `TASKA_TELEGRAM_BOT_TOKEN` / `TASKA_TELEGRAM_BOT_USERNAME` | Telegram Login Widget для входа и привязки аккаунта | пусто |
 
 Перед публикацией замените `TASKA_SECRET_KEY` и `TASKA_SETUP_KEY` на разные длинные случайные значения и отключите debug. После создания администратора setup-маршрут автоматически закрывается. OAuth-провайдеры необязательны: соответствующие кнопки появляются только при заполненной конфигурации.
+
+Для GitHub создайте OAuth App и укажите callback URL `https://ваш-домен/auth/github/callback`. Для Telegram создайте бота через BotFather, задайте домен командой `/setdomain` и заполните обе переменные Telegram. Все OAuth API-ключи и токены должны находиться только в `.env` или `.env.quick-start`; они не вводятся и не сохраняются через интерфейс Taska.
 
 Passkey требует HTTPS, кроме разработки на `localhost`. Например, для `https://taska.example.com` задайте `TASKA_WEBAUTHN_RP_ID=taska.example.com` и `TASKA_WEBAUTHN_ORIGIN=https://taska.example.com`. RP ID и origin нельзя менять после регистрации passkey без повторной привязки устройств.
 

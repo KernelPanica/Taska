@@ -10,13 +10,24 @@ from starlette.responses import Response
 
 from taska import __version__
 from taska.config import get_settings
-from taska.routes import account, admin, auth, dashboard, invite, oauth, passkeys, profiles, projects, setup
+from taska.routes import (
+    account,
+    admin,
+    auth,
+    dashboard,
+    invite,
+    oauth,
+    passkeys,
+    profiles,
+    projects,
+    setup,
+)
 from taska.services.bootstrap import init_db
 from taska.services.setup import is_setup_required
 
 settings = get_settings()
 
-SETUP_EXEMPT_PREFIXES = ("/static",)
+SETUP_EXEMPT_PREFIXES = ("/static", "/setup")
 SETUP_EXEMPT_PATHS = {"/health", "/setup"}
 
 

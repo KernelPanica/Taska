@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Активация Taska</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <main class="container main">
+    <section class="card card-narrow setup-card">
+      <p class="setup-badge">Первый запуск</p>
+      <h1>Активация Taska</h1>
+      <p class="muted">
+        Введите ключ первоначальной настройки, который установочный скрипт вывел в консоль.
+      </p>
+      {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+      <form method="post" action="/setup/unlock" class="form">
+        <label>
+          Ключ настройки
+          <input type="password" name="setup_key" autocomplete="off" required autofocus>
+        </label>
+        <button type="submit" class="btn btn-primary btn-block">Продолжить</button>
+      </form>
+    </section>
+  </main>
+</body>
+</html>

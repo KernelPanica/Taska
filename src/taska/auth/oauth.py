@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import secrets
+import time
 from urllib.parse import urlencode
 
 import httpx
@@ -86,6 +87,13 @@ def verify_telegram_auth(data: dict[str, str]) -> bool:
 
     received_hash = data.get("hash")
     if not received_hash:
+        return False
+
+    try:
+        auth_date = int(data.get("auth_date", "0"))
+    except ValueError:
+        return False
+    if auth_date <= 0 or abs(int(time.time()) - auth_date) > 600:
         return False
 
     check_items = {k: v for k, v in data.items() if k != "hash" and v}
