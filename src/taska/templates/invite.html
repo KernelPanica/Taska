@@ -10,7 +10,7 @@
     <div class="alert alert-error">Ссылка-приглашение недействительна или уже использована.</div>
     <p><a href="/login">Перейти ко входу</a></p>
   {% else %}
-    <p class="muted">Создайте аккаунт и укажите токен, выданный администратором.</p>
+    <p class="muted">Создайте аккаунт по логину и паролю или продолжите через Discord.</p>
 
     {% if error %}
       <div class="alert alert-error">{{ error }}</div>
@@ -23,14 +23,15 @@
       </label>
       <label>
         Пароль
-        <input type="password" name="password" required autocomplete="new-password">
-      </label>
-      <label>
-        Токен участника
-        <input type="text" name="member_token" placeholder="PM-S1_..." required>
+        <input type="password" name="password" minlength="8" required autocomplete="new-password">
       </label>
       <button type="submit" class="btn btn-primary btn-block">Зарегистрироваться</button>
     </form>
+    {% if discord_configured %}
+      <div class="oauth-divider"><span>или</span></div>
+      <a href="/invite/{{ token }}/discord" class="btn btn-oauth btn-discord btn-block">Зарегистрироваться через Discord</a>
+      <p class="muted oauth-hint">Пароль можно будет задать позже в профиле.</p>
+    {% endif %}
   {% endif %}
 </section>
 {% endblock %}

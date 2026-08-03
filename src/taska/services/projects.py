@@ -8,9 +8,16 @@ from taska.constants import (
     TASK_STATUS_IN_PROGRESS,
     TASK_STATUS_UNASSIGNED,
 )
-from taska.models.project import Project, Task, TaskApplication, task_required_tags
+from taska.models.project import (
+    Project,
+    Task,
+    TaskApplication,
+    TaskProgress,
+    TaskStatusRequest,
+)
 from taska.models.tag import Tag
 from taska.models.user import User
+from taska.services.notifications import create_notification, notify_users, pm_user_ids
 from taska.utils.datetime import utc_now
 
 
@@ -53,6 +60,9 @@ def get_task(db: Session, task_id: int) -> Task | None:
             selectinload(Task.assignee),
             selectinload(Task.applications).selectinload(TaskApplication.user),
             selectinload(Task.creator),
+            selectinload(Task.progress_updates).selectinload(TaskProgress.author),
+            selectinload(Task.status_requests).selectinload(TaskStatusRequest.requester),
+            selectinload(Task.status_requests).selectinload(TaskStatusRequest.reviewer),
         )
     )
 
@@ -224,8 +234,112 @@ def pending_applications_for_task(db: Session, task_id: int) -> list[TaskApplica
     return list(
         db.scalars(
             select(TaskApplication)
-            .where(TaskApplication.task_id == task_id, TaskApplication.status == APPLICATION_PENDING)
+            .where(
+                TaskApplication.task_id == task_id,
+                TaskApplication.status == APPLICATION_PENDING,
+            )
             .options(selectinload(TaskApplication.user))
             .order_by(TaskApplication.created_at)
         ).all()
     )
+
+
+def add_task_progress(
+    db: Session, user: User, task: Task, *, body: str, percent: int | None
+) -> TaskProgress:
+    if task.assignee_id != user.id and not is_pm(user):
+        raise ValueError("Публиковать прогресс может исполнитель задачи или PM")
+    text = body.strip()
+    if not text:
+        raise ValueError("Опишите прогресс задачи")
+    if percent is not None and not 0 <= percent <= 100:
+        raise ValueError("Прогресс должен быть от 0 до 100 процентов")
+
+    progress = TaskProgress(task_id=task.id, author_id=user.id, body=text, percent=percent)
+    db.add(progress)
+    recipients = pm_user_ids(db)
+    if task.assignee_id:
+        recipients.add(task.assignee_id)
+    recipients.discard(user.id)
+    notify_users(
+        db,
+        recipients,
+        title=f"Новый прогресс: {task.title}",
+        body=text[:240],
+        url=f"/projects/{task.project_id}/tasks/{task.id}",
+    )
+    db.commit()
+    db.refresh(progress)
+    return progress
+
+
+def request_task_status(
+    db: Session, user: User, task: Task, *, requested_status: str, message: str
+) -> TaskStatusRequest:
+    from taska.constants import TASK_STATUSES
+
+    if task.assignee_id != user.id:
+        raise ValueError("Запрос на смену статуса может отправить только исполнитель")
+    if requested_status not in TASK_STATUSES:
+        raise ValueError("Неизвестный статус")
+    if requested_status == task.status:
+        raise ValueError("Задача уже находится в этом статусе")
+    existing = db.scalar(
+        select(TaskStatusRequest).where(
+            TaskStatusRequest.task_id == task.id,
+            TaskStatusRequest.requester_id == user.id,
+            TaskStatusRequest.status == "pending",
+        )
+    )
+    if existing:
+        raise ValueError("По задаче уже есть запрос на смену статуса")
+
+    status_request = TaskStatusRequest(
+        task_id=task.id,
+        requester_id=user.id,
+        requested_status=requested_status,
+        message=message.strip(),
+    )
+    db.add(status_request)
+    notify_users(
+        db,
+        pm_user_ids(db),
+        title=f"Запрос статуса: {task.title}",
+        body=f"{user.display_name or user.username} просит изменить статус",
+        url=f"/projects/{task.project_id}/tasks/{task.id}",
+    )
+    db.commit()
+    db.refresh(status_request)
+    return status_request
+
+
+def review_status_request(
+    db: Session, pm: User, status_request: TaskStatusRequest, *, approve: bool
+) -> TaskStatusRequest:
+    if not is_pm(pm):
+        raise ValueError("Рассматривать запросы могут только PM")
+    if status_request.status != "pending":
+        raise ValueError("Запрос уже обработан")
+    task = db.get(Task, status_request.task_id)
+    if task is None:
+        raise ValueError("Задача не найдена")
+
+    status_request.status = "approved" if approve else "rejected"
+    status_request.reviewed_by_id = pm.id
+    status_request.reviewed_at = utc_now()
+    if approve:
+        task.status = status_request.requested_status
+        if task.status == TASK_STATUS_UNASSIGNED:
+            task.assignee_id = None
+        task.updated_at = utc_now()
+
+    create_notification(
+        db,
+        status_request.requester_id,
+        title="Запрос статуса одобрен" if approve else "Запрос статуса отклонён",
+        body=f"Задача: {task.title}",
+        url=f"/projects/{task.project_id}/tasks/{task.id}",
+    )
+    db.commit()
+    db.refresh(status_request)
+    return status_request

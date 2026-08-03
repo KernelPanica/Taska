@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     github_client_secret: str = ""
     telegram_bot_token: str = ""
     telegram_bot_username: str = ""
+    discord_client_id: str = ""
+    discord_client_secret: str = ""
 
 
 @lru_cache

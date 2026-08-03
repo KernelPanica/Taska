@@ -2,8 +2,10 @@ from sqlalchemy import func, inspect, select, text
 from sqlalchemy.orm import Session
 
 from taska.config import get_settings
+from taska.constants import TASK_STATUSES
 from taska.database import Base, engine
 from taska.models.invitation import Invitation
+from taska.models.project import Task
 from taska.models.site_settings import SiteSettings
 from taska.models.user import User
 from taska.utils.datetime import utc_now
@@ -29,6 +31,12 @@ def _migrate_user_profile_columns() -> None:
         "github_username": "VARCHAR(64)",
         "telegram_id": "BIGINT",
         "telegram_username": "VARCHAR(64)",
+        "discord_id": "BIGINT",
+        "discord_username": "VARCHAR(64)",
+        "discord_avatar_url": "VARCHAR(512)",
+        "avatar_data": "BLOB",
+        "avatar_mime": "VARCHAR(64)",
+        "has_password": "BOOLEAN NOT NULL DEFAULT 1",
     }
 
     with engine.begin() as connection:
@@ -46,10 +54,15 @@ def get_admin_stats(db: Session) -> dict[str, int]:
         .where(Invitation.used_at.is_(None))
         .where((Invitation.expires_at.is_(None)) | (Invitation.expires_at > utc_now()))
     ) or 0
+    task_status_counts = {
+        code: db.scalar(select(func.count()).select_from(Task).where(Task.status == code)) or 0
+        for code in TASK_STATUSES
+    }
     return {
         "users_count": users_count,
         "invitations_count": invitations_count,
         "active_invitations": active_invitations,
+        "task_status_counts": task_status_counts,
     }
 
 

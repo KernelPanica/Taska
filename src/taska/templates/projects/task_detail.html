@@ -23,6 +23,9 @@
     </div>
 
     <p>{{ task.description or "Без описания" }}</p>
+    <h2>Фотографии и файлы</h2>
+    {% if attachments %}<div class="attachment-list">{% for item in attachments %}<a href="/task-attachments/{{ item.id }}" target="_blank">{{ item.filename }}</a>{% endfor %}</div>{% else %}<p class="muted">Файлов пока нет.</p>{% endif %}
+    {% if task.assignee_id == user.id or is_pm %}<form method="post" action="/projects/{{ project.id }}/tasks/{{ task.id }}/attachments" enctype="multipart/form-data" class="form-inline-row"><input type="file" name="attachment" accept="image/*,application/pdf" required><button class="btn btn-ghost" type="submit">Прикрепить</button></form>{% endif %}
 
     <dl class="token-details">
       <dt>Исполнитель</dt>
@@ -46,6 +49,99 @@
     {% elif not user.is_admin and task.status == 'unassigned' and task.assignee_id is none %}
       <p class="muted">Для заявки нужны все требуемые теги в вашем профиле.</p>
     {% endif %}
+  </div>
+
+  <div class="task-workspace">
+    <section class="workspace-main">
+      {% if can_post_progress %}
+        <div class="card inner-card">
+          <h2>Опубликовать прогресс</h2>
+          <form method="post" action="/projects/{{ project.id }}/tasks/{{ task.id }}/progress" class="form">
+            <label>
+              Что сделано
+              <textarea name="body" rows="4" required placeholder="Кратко опишите результат, проблему или следующий шаг"></textarea>
+            </label>
+            <label>
+              Готовность, %
+              <input type="number" name="percent" min="0" max="100" placeholder="Необязательно">
+            </label>
+            <button type="submit" class="btn btn-primary">Опубликовать</button>
+          </form>
+        </div>
+      {% endif %}
+
+      <div class="card inner-card">
+        <h2>Прогресс задачи</h2>
+        <div class="progress-feed">
+          {% for update in progress_updates %}
+            <article class="progress-entry">
+              <div class="progress-entry-head">
+                <strong>{{ update.author.display_name or update.author.username }}</strong>
+                <time>{{ update.created_at }}</time>
+              </div>
+              {% if update.percent is not none %}
+                <div class="progress-meter" aria-label="Готовность {{ update.percent }}%">
+                  <span style="width: {{ update.percent }}%"></span>
+                </div>
+                <small>{{ update.percent }}%</small>
+              {% endif %}
+              <p>{{ update.body }}</p>
+            </article>
+          {% else %}
+            <p class="empty-state">Обновлений прогресса пока нет.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <aside class="workspace-side">
+      {% if can_request_status %}
+        <div class="card inner-card">
+          <h2>Запросить статус</h2>
+          <form method="post" action="/projects/{{ project.id }}/tasks/{{ task.id }}/status-request" class="form">
+            <label>
+              Новый статус
+              <select name="requested_status" required>
+                {% for code, label in statuses.items() %}
+                  {% if code != task.status %}<option value="{{ code }}">{{ label }}</option>{% endif %}
+                {% endfor %}
+              </select>
+            </label>
+            <label>
+              Комментарий
+              <textarea name="message" rows="3" placeholder="Почему статус нужно изменить"></textarea>
+            </label>
+            <button type="submit" class="btn btn-primary">Отправить всем PM</button>
+          </form>
+        </div>
+      {% endif %}
+
+      {% if status_requests %}
+        <div class="card inner-card">
+          <h2>Запросы статуса</h2>
+          <div class="status-request-list">
+            {% for status_request in status_requests %}
+              <article class="status-request status-request-{{ status_request.status }}">
+                <strong>{{ statuses[status_request.requested_status] }}</strong>
+                <small>{{ status_request.requester.display_name or status_request.requester.username }}</small>
+                {% if status_request.message %}<p>{{ status_request.message }}</p>{% endif %}
+                <span class="request-state">{{ {'pending': 'Ожидает', 'approved': 'Одобрен', 'rejected': 'Отклонён'}[status_request.status] }}</span>
+                {% if is_pm and status_request.status == 'pending' %}
+                  <div class="request-actions">
+                    <form method="post" action="/projects/{{ project.id }}/tasks/{{ task.id }}/status-requests/{{ status_request.id }}/approve">
+                      <button class="btn btn-primary btn-sm" type="submit">Одобрить</button>
+                    </form>
+                    <form method="post" action="/projects/{{ project.id }}/tasks/{{ task.id }}/status-requests/{{ status_request.id }}/reject">
+                      <button class="btn btn-ghost btn-sm" type="submit">Отклонить</button>
+                    </form>
+                  </div>
+                {% endif %}
+              </article>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+    </aside>
   </div>
 
   {% if is_pm %}

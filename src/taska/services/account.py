@@ -6,6 +6,7 @@ from taska.constants import (
     BLOCKING_ASSIGNEE_STATUSES,
     TASK_STATUS_CLOSED,
     TASK_STATUS_DONE,
+    TASK_STATUSES,
 )
 from taska.models.project import Task, TaskApplication
 from taska.models.tag import TagSuggestion
@@ -28,7 +29,9 @@ def get_user_dashboard(db: Session, user: User) -> dict:
     )
 
     active_tasks = [t for t in assigned_tasks if t.status in BLOCKING_ASSIGNEE_STATUSES]
-    done_count = sum(1 for t in assigned_tasks if t.status in {TASK_STATUS_DONE, TASK_STATUS_CLOSED})
+    done_count = sum(
+        1 for task in assigned_tasks if task.status in {TASK_STATUS_DONE, TASK_STATUS_CLOSED}
+    )
 
     pending_applications = db.scalar(
         select(func.count())
@@ -57,6 +60,10 @@ def get_user_dashboard(db: Session, user: User) -> dict:
         "current_task": current_task,
         "recent_tasks": assigned_tasks[:5],
         "tags": user.tags,
+        "status_counts": {
+            status: sum(1 for task in assigned_tasks if task.status == status)
+            for status in TASK_STATUSES
+        },
     }
 
 
@@ -94,7 +101,9 @@ def unlink_github(db: Session, user: User) -> None:
     db.commit()
 
 
-def link_telegram(db: Session, user: User, *, telegram_id: int, telegram_username: str | None) -> None:
+def link_telegram(
+    db: Session, user: User, *, telegram_id: int, telegram_username: str | None
+) -> None:
     existing = db.scalar(select(User).where(User.telegram_id == telegram_id, User.id != user.id))
     if existing is not None:
         raise ValueError("Этот Telegram уже привязан к другому аккаунту")
@@ -116,3 +125,31 @@ def find_user_by_github(db: Session, github_id: int) -> User | None:
 
 def find_user_by_telegram(db: Session, telegram_id: int) -> User | None:
     return db.scalar(select(User).where(User.telegram_id == telegram_id))
+
+
+def link_discord(
+    db: Session,
+    user: User,
+    *,
+    discord_id: int,
+    discord_username: str,
+    discord_avatar_url: str | None,
+) -> None:
+    existing = db.scalar(select(User).where(User.discord_id == discord_id, User.id != user.id))
+    if existing is not None:
+        raise ValueError("Этот Discord уже привязан к другому аккаунту")
+    user.discord_id = discord_id
+    user.discord_username = discord_username
+    user.discord_avatar_url = discord_avatar_url
+    db.commit()
+
+
+def unlink_discord(db: Session, user: User) -> None:
+    user.discord_id = None
+    user.discord_username = None
+    user.discord_avatar_url = None
+    db.commit()
+
+
+def find_user_by_discord(db: Session, discord_id: int) -> User | None:
+    return db.scalar(select(User).where(User.discord_id == discord_id))

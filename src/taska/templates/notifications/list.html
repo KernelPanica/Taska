@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Уведомления — {{ site.app_name }}{% endblock %}
+
+{% block content %}
+<section class="page-section">
+  <div class="section-header">
+    <div>
+      <h1>Уведомления</h1>
+      <p class="muted">Последние события по задачам и запросам.</p>
+    </div>
+  </div>
+  <div class="notification-list">
+    {% for notification in notifications %}
+      <a class="notification-item {% if not notification.is_read %}notification-unread{% endif %}" href="{{ notification.url }}">
+        <span>
+          <strong>{{ notification.title }}</strong>
+          {% if notification.body %}<small>{{ notification.body }}</small>{% endif %}
+        </span>
+        <time>{{ notification.created_at }}</time>
+      </a>
+    {% else %}
+      <p class="empty-state">Уведомлений пока нет.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

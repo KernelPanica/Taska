@@ -1,13 +1,11 @@
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from taska.auth.dependencies import get_current_user
-from taska.auth.oauth import github_configured, telegram_configured
-from taska.config import get_settings
 from taska.constants import TASK_STATUSES
 from taska.database import get_db
 from taska.models.user import User
@@ -36,6 +34,12 @@ def home(
 
     if user.is_admin:
         admin_stats = get_admin_stats(db)
+        # Keep the template compatible with existing databases and mocked stats.
+        admin_stats.setdefault(
+            "task_status_counts", {status: 0 for status in TASK_STATUSES}
+        )
+        for status in TASK_STATUSES:
+            admin_stats["task_status_counts"].setdefault(status, 0)
         return templates.TemplateResponse(
             request,
             "dashboard/admin.html",
@@ -52,5 +56,6 @@ def home(
             "dashboard": dashboard,
             "statuses": TASK_STATUSES,
             "is_pm": is_pm(user),
+            "task_status_counts": dashboard.get("status_counts", {}),
         },
     )

@@ -1,20 +1,21 @@
 from pathlib import Path
+from typing import Annotated
 from urllib.parse import quote, unquote
 
-from typing import Annotated
-
-from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from taska.auth.dependencies import get_current_user
 from taska.constants import TASK_STATUSES
 from taska.database import get_db
+from taska.models.project import TaskAttachment
 from taska.models.user import User
 from taska.services.bootstrap import get_site_context
 from taska.services.profiles import list_all_tags
 from taska.services.projects import (
+    add_task_progress,
     apply_for_task,
     approve_application,
     create_project,
@@ -25,6 +26,8 @@ from taska.services.projects import (
     list_projects,
     pending_applications_for_task,
     reject_application,
+    request_task_status,
+    review_status_request,
     update_task_status,
     user_has_required_tags,
 )
@@ -190,6 +193,15 @@ def task_detail(
             "pending_applications": pending_applications_for_task(db, task.id)
             if is_pm(current)
             else [],
+            "progress_updates": sorted(
+                task.progress_updates, key=lambda item: item.created_at, reverse=True
+            ),
+            "status_requests": sorted(
+                task.status_requests, key=lambda item: item.created_at, reverse=True
+            ),
+            "can_post_progress": task.assignee_id == current.id or is_pm(current),
+            "can_request_status": task.assignee_id == current.id,
+            "attachments": sorted(task.attachments, key=lambda item: item.created_at, reverse=True),
             "error": unquote(error) if error else None,
             "success": unquote(success) if success else None,
         },
@@ -252,7 +264,8 @@ def approve_task_application(
         )
 
     return RedirectResponse(
-        f"/projects/{project_id}/tasks/{task_id}?success={quote('Заявка одобрена, задача в работе')}",
+        f"/projects/{project_id}/tasks/{task_id}"
+        f"?success={quote('Заявка одобрена, задача в работе')}",
         status_code=303,
     )
 
@@ -315,5 +328,163 @@ def change_task_status(
 
     return RedirectResponse(
         f"/projects/{project_id}/tasks/{task_id}?success={quote('Статус обновлён')}",
+        status_code=303,
+    )
+
+
+@router.post("/projects/{project_id}/tasks/{task_id}/attachments")
+async def upload_task_attachment(
+    project_id: int,
+    task_id: int,
+    attachment: UploadFile = File(...),
+    user: User | None = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    current = _require_login(user)
+    if isinstance(current, RedirectResponse):
+        return current
+    task = get_task(db, task_id)
+    if (
+        task is None
+        or task.project_id != project_id
+        or (task.assignee_id != current.id and not is_pm(current))
+    ):
+        return RedirectResponse(f"/projects/{project_id}/tasks/{task_id}", status_code=303)
+    allowed = {"image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf"}
+    if attachment.content_type not in allowed:
+        message = quote("Поддерживаются изображения и PDF")
+        return RedirectResponse(
+            f"/projects/{project_id}/tasks/{task_id}?error={message}", status_code=303
+        )
+    data = await attachment.read(5 * 1024 * 1024 + 1)
+    if len(data) > 5 * 1024 * 1024:
+        message = quote("Файл не должен быть больше 5 МБ")
+        return RedirectResponse(
+            f"/projects/{project_id}/tasks/{task_id}?error={message}", status_code=303
+        )
+    db.add(
+        TaskAttachment(
+            task_id=task.id,
+            uploaded_by_id=current.id,
+            filename=attachment.filename or "file",
+            mime_type=attachment.content_type,
+            data=data,
+        )
+    )
+    db.commit()
+    message = quote("Файл прикреплён")
+    return RedirectResponse(
+        f"/projects/{project_id}/tasks/{task_id}?success={message}", status_code=303
+    )
+
+
+@router.get("/task-attachments/{attachment_id}")
+def task_attachment(
+    attachment_id: int,
+    user: User | None = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    current = _require_login(user)
+    if isinstance(current, RedirectResponse):
+        return current
+    item = db.get(TaskAttachment, attachment_id)
+    if item is None:
+        return Response(status_code=404)
+    return Response(
+        item.data,
+        media_type=item.mime_type,
+        headers={"Content-Disposition": f'inline; filename="{item.filename}"'},
+    )
+
+
+@router.post("/projects/{project_id}/tasks/{task_id}/progress")
+def publish_task_progress(
+    project_id: int,
+    task_id: int,
+    body: str = Form(...),
+    percent: int | None = Form(None),
+    user: User | None = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> RedirectResponse:
+    current = _require_login(user)
+    if isinstance(current, RedirectResponse):
+        return current
+    task = get_task(db, task_id)
+    if task is None or task.project_id != project_id:
+        return RedirectResponse("/projects", status_code=303)
+    try:
+        add_task_progress(db, current, task, body=body, percent=percent)
+    except ValueError as exc:
+        return RedirectResponse(
+            f"/projects/{project_id}/tasks/{task_id}?error={quote(str(exc))}",
+            status_code=303,
+        )
+    return RedirectResponse(
+        f"/projects/{project_id}/tasks/{task_id}?success={quote('Прогресс опубликован')}",
+        status_code=303,
+    )
+
+
+@router.post("/projects/{project_id}/tasks/{task_id}/status-request")
+def create_status_request(
+    project_id: int,
+    task_id: int,
+    requested_status: str = Form(...),
+    message: str = Form(""),
+    user: User | None = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> RedirectResponse:
+    current = _require_login(user)
+    if isinstance(current, RedirectResponse):
+        return current
+    task = get_task(db, task_id)
+    if task is None or task.project_id != project_id:
+        return RedirectResponse("/projects", status_code=303)
+    try:
+        request_task_status(
+            db, current, task, requested_status=requested_status, message=message
+        )
+    except ValueError as exc:
+        return RedirectResponse(
+            f"/projects/{project_id}/tasks/{task_id}?error={quote(str(exc))}",
+            status_code=303,
+        )
+    return RedirectResponse(
+        f"/projects/{project_id}/tasks/{task_id}?success={quote('Запрос отправлен всем PM')}",
+        status_code=303,
+    )
+
+
+@router.post(
+    "/projects/{project_id}/tasks/{task_id}/status-requests/{request_id}/{decision}"
+)
+def decide_status_request(
+    project_id: int,
+    task_id: int,
+    request_id: int,
+    decision: str,
+    user: User | None = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> RedirectResponse:
+    current = _require_login(user)
+    if isinstance(current, RedirectResponse):
+        return current
+    from taska.models.project import TaskStatusRequest
+
+    status_request = db.get(TaskStatusRequest, request_id)
+    if status_request is None or status_request.task_id != task_id or decision not in {
+        "approve",
+        "reject",
+    }:
+        return RedirectResponse(f"/projects/{project_id}/tasks/{task_id}", status_code=303)
+    try:
+        review_status_request(db, current, status_request, approve=decision == "approve")
+    except ValueError as exc:
+        return RedirectResponse(
+            f"/projects/{project_id}/tasks/{task_id}?error={quote(str(exc))}",
+            status_code=303,
+        )
+    return RedirectResponse(
+        f"/projects/{project_id}/tasks/{task_id}?success={quote('Запрос обработан')}",
         status_code=303,
     )

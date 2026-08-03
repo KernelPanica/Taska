@@ -12,11 +12,10 @@
     <a href="/account" class="btn btn-primary">Мой профиль</a>
   </div>
 
-  <div class="dashboard-tabs">
-    <a href="/" class="dashboard-tab active">Обзор</a>
-    <a href="/projects" class="dashboard-tab">Проекты</a>
-    <a href="/profiles" class="dashboard-tab">Штат</a>
-    <a href="/account" class="dashboard-tab">Настройки</a>
+  <div class="actions-grid dashboard-quick-actions">
+    <a href="/projects" class="action-card"><h3>Найти задачу</h3><p>Посмотреть проекты и доступные задачи</p></a>
+    <a href="/notifications" class="action-card"><h3>Уведомления</h3><p>Решения по заявкам и изменения задач</p></a>
+    <a href="/profiles/{{ user.username }}" class="action-card"><h3>Мой публичный профиль</h3><p>Навыки, роль и информация для команды</p></a>
   </div>
 
   <div class="stats-grid">
@@ -39,6 +38,10 @@
   </div>
 
   <div class="split-layout">
+    <div class="card chart-card"><h2>Мои задачи по статусам</h2><div class="bar-chart">
+      {% set chart_counts = task_status_counts | default({}, true) %}{% set chart_total = chart_counts.values() | sum %}
+      {% for code, label in statuses.items() %}{% set count = chart_counts.get(code, 0) %}<div class="bar-row"><span>{{ label }}</span><div class="bar-track"><i style="width: {{ (count / (chart_total or 1) * 100) | round(0) }}%"></i></div><b>{{ count }}</b></div>{% endfor %}
+    </div></div>
     <div class="card">
       <h2>Текущая задача</h2>
       {% if dashboard.current_task %}

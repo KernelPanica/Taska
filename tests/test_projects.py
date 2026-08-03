@@ -4,7 +4,14 @@ from sqlalchemy import select
 from taska.auth.security import hash_password
 from taska.database import get_db
 from taska.main import app
-from taska.models.project import Project, Task, TaskApplication
+from taska.models.notification import Notification
+from taska.models.project import (
+    Project,
+    Task,
+    TaskApplication,
+    TaskProgress,
+    TaskStatusRequest,
+)
 from taska.models.tag import Tag
 from taska.models.user import User
 from taska.services.profiles import assign_tag_to_user
@@ -179,3 +186,109 @@ def test_cannot_apply_without_tags(client, pm_user, member_user):
     )
     assert response.status_code == 303
     assert "error=" in response.headers["location"]
+
+
+def test_assignee_posts_progress_and_notifies_pm(client, pm_user, member_user):
+    override = app.dependency_overrides[get_db]
+    db_gen = override()
+    db = next(db_gen)
+    try:
+        project = Project(name="Progress", description="", created_by_id=pm_user.id)
+        db.add(project)
+        db.flush()
+        task = Task(
+            project_id=project.id,
+            title="Ship feature",
+            description="",
+            created_by_id=pm_user.id,
+            assignee_id=member_user.id,
+            status="in_progress",
+        )
+        db.add(task)
+        db.commit()
+        project_id, task_id = project.id, task.id
+    finally:
+        db_gen.close()
+
+    client.post("/login", data={"username": "dev1", "password": "memberpass"})
+    response = client.post(
+        f"/projects/{project_id}/tasks/{task_id}/progress",
+        data={"body": "API finished", "percent": "70"},
+        follow_redirects=False,
+    )
+    assert response.status_code == 303
+
+    db_gen = override()
+    db = next(db_gen)
+    try:
+        progress = db.scalar(select(TaskProgress))
+        assert progress.body == "API finished"
+        assert progress.percent == 70
+        notification = db.scalar(select(Notification).where(Notification.user_id == pm_user.id))
+        assert notification is not None
+    finally:
+        db_gen.close()
+
+
+def test_assignee_requests_status_and_pm_approves(client, pm_user, member_user):
+    override = app.dependency_overrides[get_db]
+    db_gen = override()
+    db = next(db_gen)
+    try:
+        project = Project(name="Review", description="", created_by_id=pm_user.id)
+        db.add(project)
+        db.flush()
+        task = Task(
+            project_id=project.id,
+            title="Ready for review",
+            description="",
+            created_by_id=pm_user.id,
+            assignee_id=member_user.id,
+            status="in_progress",
+        )
+        db.add(task)
+        db.commit()
+        project_id, task_id = project.id, task.id
+    finally:
+        db_gen.close()
+
+    client.post("/login", data={"username": "dev1", "password": "memberpass"})
+    response = client.post(
+        f"/projects/{project_id}/tasks/{task_id}/status-request",
+        data={"requested_status": "in_review", "message": "Please review"},
+        follow_redirects=False,
+    )
+    assert response.status_code == 303
+
+    db_gen = override()
+    db = next(db_gen)
+    try:
+        status_request = db.scalar(select(TaskStatusRequest))
+        request_id = status_request.id
+        assert status_request.status == "pending"
+    finally:
+        db_gen.close()
+
+    client.post("/login", data={"username": "pm1", "password": "pmpass"})
+    response = client.post(
+        f"/projects/{project_id}/tasks/{task_id}/status-requests/{request_id}/approve",
+        follow_redirects=False,
+    )
+    assert response.status_code == 303
+
+    db_gen = override()
+    db = next(db_gen)
+    try:
+        task = db.get(Task, task_id)
+        status_request = db.get(TaskStatusRequest, request_id)
+        assert task.status == "in_review"
+        assert status_request.status == "approved"
+        notification = db.scalar(
+            select(Notification).where(
+                Notification.user_id == member_user.id,
+                Notification.title == "Запрос статуса одобрен",
+            )
+        )
+        assert notification is not None
+    finally:
+        db_gen.close()

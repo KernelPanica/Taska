@@ -2,10 +2,14 @@ import hashlib
 import hmac
 import time
 
+from sqlalchemy import select
+
 from taska.auth.oauth import verify_telegram_auth
-from taska.auth.security import decrypt_full_name, encrypt_full_name, hash_password, verify_password
+from taska.auth.security import hash_password, verify_password
 from taska.config import get_settings
-from taska.services.token_generator import build_member_token, parse_member_token
+from taska.database import get_db
+from taska.main import app
+from taska.models.user import User
 
 
 def test_health_check(empty_client):
@@ -119,21 +123,6 @@ def test_admin_login_and_panel(client):
     assert "Панель администратора" in response.text
 
 
-def test_token_roundtrip():
-    token = build_member_token("PM-S", 1, "Иванов Иван")
-    assert token.startswith("PM-S1_")
-
-    parsed = parse_member_token(token)
-    assert parsed["position_code"] == "PM-S"
-    assert parsed["experience_years"] == 1
-    assert parsed["full_name"] == "Иванов Иван"
-
-
-def test_name_encryption():
-    encrypted = encrypt_full_name("Петров Пётр")
-    assert decrypt_full_name(encrypted) == "Петров Пётр"
-
-
 def test_password_hash():
     hashed = hash_password("secret")
     assert verify_password("secret", hashed)
@@ -201,22 +190,34 @@ def test_expired_invitation_rejected(client):
     assert "недействительна" in response.text
 
 
-def test_generate_member_token_in_admin(client):
+def test_password_registration_uses_only_invitation(client):
     client.post("/login", data={"username": "testadmin", "password": "testpass"})
+    client.post("/admin/invitations", follow_redirects=False)
+    override = app.dependency_overrides[get_db]
+    db_gen = override()
+    db = next(db_gen)
+    try:
+        from taska.models.invitation import Invitation
 
+        invitation = db.scalar(select(Invitation))
+        token = invitation.token
+    finally:
+        db_gen.close()
     response = client.post(
-        "/admin/tokens",
-        data={
-            "position_code": "F-M",
-            "experience_years": "3",
-            "full_name": "Сидоров Алексей",
-        },
+        f"/invite/{token}",
+        data={"username": "new-user", "password": "securepass"},
         follow_redirects=False,
     )
     assert response.status_code == 303
-    assert "generated=" in response.headers["location"]
 
-    response = client.get(response.headers["location"])
-    assert response.status_code == 200
-    assert "F-M3_" in response.text
-    assert "Сидоров Алексей" in response.text
+    db_gen = override()
+    db = next(db_gen)
+    try:
+        user = db.scalar(select(User).where(User.username == "new-user"))
+        assert user is not None
+        assert user.has_password
+        assert user.position_code is None
+    finally:
+        db_gen.close()
+
+

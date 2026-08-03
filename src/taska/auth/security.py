@@ -1,10 +1,8 @@
 import base64
-import hashlib
 import secrets
 from datetime import UTC, datetime, timedelta
 
 import bcrypt
-from cryptography.fernet import Fernet
 from jose import JWTError, jwt
 
 from taska.config import get_settings
@@ -16,16 +14,13 @@ SETUP_UNLOCK_EXPIRE_MINUTES = 15
 INVITATION_EXPIRE_DAYS = 7
 
 
-def _fernet() -> Fernet:
-    settings = get_settings()
-    digest = hashlib.sha256(settings.secret_key.encode()).digest()
-    key = base64.urlsafe_b64encode(digest)
-    return Fernet(key)
-
-
 def hash_password(password: str) -> str:
     hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
     return hashed.decode("ascii")
+
+
+def unusable_password_hash() -> str:
+    return hash_password(secrets.token_urlsafe(48))
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -109,16 +104,27 @@ def verify_setup_unlock_token(token: str) -> bool:
         return False
 
 
+def create_invitation_oauth_token(invitation_token: str) -> str:
+    settings = get_settings()
+    expire = datetime.now(UTC) + timedelta(minutes=10)
+    return jwt.encode(
+        {"invitation": invitation_token, "purpose": "invitation-oauth", "exp": expire},
+        settings.secret_key,
+        algorithm=ALGORITHM,
+    )
+
+
+def decode_invitation_oauth_token(token: str) -> str | None:
+    settings = get_settings()
+    try:
+        payload = jwt.decode(token, settings.secret_key, algorithms=[ALGORITHM])
+        if payload.get("purpose") != "invitation-oauth":
+            return None
+        return payload.get("invitation")
+    except JWTError:
+        return None
+
+
 def generate_invitation_token() -> str:
     return secrets.token_urlsafe(32)
 
-
-def encrypt_full_name(full_name: str) -> str:
-    normalized = " ".join(full_name.strip().split())
-    cipher = _fernet().encrypt(normalized.encode("utf-8"))
-    return cipher.decode("ascii")
-
-
-def decrypt_full_name(cipher_text: str) -> str:
-    plain = _fernet().decrypt(cipher_text.encode("ascii"))
-    return plain.decode("utf-8")

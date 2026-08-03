@@ -15,6 +15,9 @@ from taska.config import get_settings
 GITHUB_AUTHORIZE_URL = "https://github.com/login/oauth/authorize"
 GITHUB_TOKEN_URL = "https://github.com/login/oauth/access_token"
 GITHUB_USER_URL = "https://api.github.com/user"
+DISCORD_AUTHORIZE_URL = "https://discord.com/oauth2/authorize"
+DISCORD_TOKEN_URL = "https://discord.com/api/oauth2/token"
+DISCORD_USER_URL = "https://discord.com/api/users/@me"
 OAUTH_STATE_COOKIE = "taska_oauth_state"
 LINK_USER_COOKIE = "taska_oauth_link_user"
 
@@ -27,6 +30,11 @@ def github_configured() -> bool:
 def telegram_configured() -> bool:
     settings = get_settings()
     return bool(settings.telegram_bot_token and settings.telegram_bot_username)
+
+
+def discord_configured() -> bool:
+    settings = get_settings()
+    return bool(settings.discord_client_id and settings.discord_client_secret)
 
 
 def start_github_oauth(*, link_username: str | None = None) -> RedirectResponse:
@@ -42,6 +50,31 @@ def start_github_oauth(*, link_username: str | None = None) -> RedirectResponse:
         "state": state,
     }
     response = RedirectResponse(f"{GITHUB_AUTHORIZE_URL}?{urlencode(params)}", status_code=303)
+    response.set_cookie(OAUTH_STATE_COOKIE, state, httponly=True, samesite="lax", max_age=600)
+    if link_username:
+        response.set_cookie(
+            LINK_USER_COOKIE,
+            create_oauth_link_token(link_username),
+            httponly=True,
+            samesite="lax",
+            max_age=600,
+        )
+    return response
+
+
+def start_discord_oauth(*, link_username: str | None = None) -> RedirectResponse:
+    settings = get_settings()
+    if not discord_configured():
+        return RedirectResponse("/login?error=Discord+OAuth+не+настроен", status_code=303)
+    state = secrets.token_urlsafe(32)
+    params = {
+        "client_id": settings.discord_client_id,
+        "redirect_uri": f"{settings.base_url.rstrip('/')}/auth/discord/callback",
+        "response_type": "code",
+        "scope": "identify",
+        "state": state,
+    }
+    response = RedirectResponse(f"{DISCORD_AUTHORIZE_URL}?{urlencode(params)}", status_code=303)
     response.set_cookie(OAUTH_STATE_COOKIE, state, httponly=True, samesite="lax", max_age=600)
     if link_username:
         response.set_cookie(
@@ -75,6 +108,31 @@ async def exchange_github_code(code: str) -> dict:
         user_response = await client.get(
             GITHUB_USER_URL,
             headers={"Authorization": f"Bearer {access_token}", "Accept": "application/json"},
+        )
+        user_response.raise_for_status()
+        return user_response.json()
+
+
+async def exchange_discord_code(code: str) -> dict:
+    settings = get_settings()
+    async with httpx.AsyncClient() as client:
+        token_response = await client.post(
+            DISCORD_TOKEN_URL,
+            data={
+                "client_id": settings.discord_client_id,
+                "client_secret": settings.discord_client_secret,
+                "grant_type": "authorization_code",
+                "code": code,
+                "redirect_uri": f"{settings.base_url.rstrip('/')}/auth/discord/callback",
+            },
+        )
+        token_response.raise_for_status()
+        access_token = token_response.json().get("access_token")
+        if not access_token:
+            raise ValueError("Не удалось получить токен Discord")
+        user_response = await client.get(
+            DISCORD_USER_URL,
+            headers={"Authorization": f"Bearer {access_token}"},
         )
         user_response.raise_for_status()
         return user_response.json()

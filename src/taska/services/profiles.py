@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from taska.models.tag import Tag, TagSuggestion
 from taska.models.user import User
-from taska.services.token_generator import POSITION_CODES, parse_member_token
+from taska.roles import POSITION_CODES
 from taska.utils.datetime import utc_now
 
 TAG_NAME_PATTERN = re.compile(r"^[a-zA-Z0-9а-яА-ЯёЁ\-\+\.# ]{2,64}$")
@@ -17,13 +17,6 @@ def normalize_tag_name(name: str) -> str:
         msg = "Тег должен быть от 2 до 64 символов (буквы, цифры, пробел, - + . #)"
         raise ValueError(msg)
     return cleaned
-
-
-def sync_profile_from_token(user: User, member_token: str) -> None:
-    parsed = parse_member_token(member_token)
-    user.display_name = str(parsed["full_name"])
-    user.position_code = str(parsed["position_code"])
-    user.experience_years = int(parsed["experience_years"])
 
 
 def get_position_label(position_code: str | None) -> str:
@@ -52,15 +45,24 @@ def get_member_profile(db: Session, username: str) -> User | None:
     if user is None:
         return None
 
-    if user.member_token and not user.display_name:
-        try:
-            sync_profile_from_token(user, user.member_token)
-            db.commit()
-            db.refresh(user)
-        except ValueError:
-            pass
-
     return user
+
+
+def update_user_role(
+    db: Session, target: User, admin: User, *, position_code: str, experience_years: int
+) -> User:
+    if not admin.is_admin:
+        raise ValueError("Назначать роли может только администратор")
+    position = position_code.strip().upper()
+    if position and position not in POSITION_CODES:
+        raise ValueError("Неизвестная роль")
+    if experience_years < 0 or experience_years > 50:
+        raise ValueError("Стаж должен быть от 0 до 50 лет")
+    target.position_code = position or None
+    target.experience_years = experience_years if position else None
+    db.commit()
+    db.refresh(target)
+    return target
 
 
 def list_all_tags(db: Session) -> list[Tag]:

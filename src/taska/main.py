@@ -16,6 +16,7 @@ from taska.routes import (
     auth,
     dashboard,
     invite,
+    notifications,
     oauth,
     passkeys,
     profiles,
@@ -75,6 +76,7 @@ app.include_router(dashboard.router)
 app.include_router(account.router)
 app.include_router(profiles.router)
 app.include_router(projects.router)
+app.include_router(notifications.router)
 app.include_router(admin.router)
 app.include_router(invite.router)
 

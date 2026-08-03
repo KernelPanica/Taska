@@ -11,6 +11,7 @@ from taska.database import get_db
 from taska.models.user import User
 from taska.services.bootstrap import get_site_context
 from taska.services.profiles import (
+    POSITION_CODES,
     approve_tag_suggestion,
     assign_tag_to_user,
     get_member_profile,
@@ -21,6 +22,7 @@ from taska.services.profiles import (
     reject_tag_suggestion,
     remove_tag_from_user,
     suggest_tag,
+    update_user_role,
 )
 
 router = APIRouter(tags=["profiles"])
@@ -93,10 +95,42 @@ def profile_detail(
             "is_own_profile": is_own_profile,
             "is_admin": is_admin,
             "all_tags": list_all_tags(db) if is_admin else [],
+            "positions": POSITION_CODES if is_admin else {},
             "pending_suggestions": pending,
             "success": unquote(success) if success else None,
             "error": unquote(error) if error else None,
         },
+    )
+
+
+@router.post("/profiles/{username}/role")
+def admin_update_role(
+    username: str,
+    position_code: str = Form(""),
+    experience_years: int = Form(0),
+    user: User | None = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> RedirectResponse:
+    current = _require_login(user)
+    if isinstance(current, RedirectResponse):
+        return current
+    target = get_member_profile(db, username)
+    if target is None:
+        return RedirectResponse("/profiles", status_code=303)
+    try:
+        update_user_role(
+            db,
+            target,
+            current,
+            position_code=position_code,
+            experience_years=experience_years,
+        )
+    except ValueError as exc:
+        return RedirectResponse(
+            f"/profiles/{username}?error={quote(str(exc))}", status_code=303
+        )
+    return RedirectResponse(
+        f"/profiles/{username}?success={quote('Роль обновлена')}", status_code=303
     )
 
 

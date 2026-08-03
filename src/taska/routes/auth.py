@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from taska.auth.dependencies import COOKIE_NAME
-from taska.auth.oauth import github_configured, telegram_configured
+from taska.auth.oauth import discord_configured, github_configured, telegram_configured
 from taska.auth.security import create_access_token, verify_password
 from taska.config import get_settings
 from taska.database import get_db
@@ -40,6 +40,7 @@ def login_page(
             "site": site,
             "user": None,
             "github_configured": github_configured(),
+            "discord_configured": discord_configured(),
             "telegram_configured": telegram_configured(),
             "telegram_bot_username": settings.telegram_bot_username,
         },
@@ -54,7 +55,7 @@ def login_submit(
     db: Session = Depends(get_db),
 ) -> RedirectResponse:
     user = db.scalar(select(User).where(User.username == username))
-    if user is None or not verify_password(password, user.password_hash):
+    if user is None or not user.has_password or not verify_password(password, user.password_hash):
         return RedirectResponse("/login?error=Неверный+логин+или+пароль", status_code=303)
 
     token = create_access_token(user.username, is_admin=user.is_admin)

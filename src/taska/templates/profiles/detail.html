@@ -14,16 +14,31 @@
   {% endif %}
 
   <div class="profile-detail card">
-    <div class="profile-detail-header">
-      <div>
+    <div class="social-profile-header social-profile-header-plain">
+      <div class="social-profile-avatar-wrap">
+        {% if is_own_profile %}<a href="/account" class="profile-avatar-link" title="Изменить аватар">{% endif %}
+        {% if profile.avatar_data %}<img src="/avatars/{{ profile.id }}" class="avatar-preview" alt="">
+        {% elif profile.discord_avatar_url %}<img src="{{ profile.discord_avatar_url }}" class="avatar-preview" alt="">
+        {% else %}<span class="avatar-preview avatar-fallback">{{ (profile.display_name or profile.username)[0] | upper }}</span>{% endif %}
+        {% if is_own_profile %}</a>{% endif %}
+      </div>
+      <div class="social-profile-content">
+       <div class="profile-detail-header">
+        <div>
         <h1>{{ profile.display_name or profile.username }}</h1>
         <p class="muted">@{{ profile.username }}</p>
-      </div>
-      <div class="profile-meta">
+        </div>
+        <div class="profile-meta">
         <span class="badge badge-active">{{ position_label }}</span>
         {% if profile.experience_years is not none %}
           <span class="badge">Стаж: {{ profile.experience_years }} лет</span>
         {% endif %}
+        </div>
+       </div>
+       <div class="tag-list social-profile-tags">
+        {% for tag in profile.tags %}<span class="tag">{{ tag.name }}</span>
+        {% else %}<span class="muted">Теги пока не назначены.</span>{% endfor %}
+       </div>
       </div>
     </div>
 
@@ -55,6 +70,24 @@
     {% endif %}
 
     {% if is_admin %}
+      <div class="card inner-card">
+        <h3>Роль и стаж</h3>
+        <form method="post" action="/profiles/{{ profile.username }}/role" class="form">
+          <label>Роль
+            <select name="position_code">
+              <option value="">Без роли</option>
+              {% for code, label in positions.items() %}
+                <option value="{{ code }}" {% if profile.position_code == code %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label>Стаж, лет
+            <input type="number" name="experience_years" min="0" max="50" value="{{ profile.experience_years or 0 }}">
+          </label>
+          <button type="submit" class="btn btn-primary">Сохранить роль</button>
+        </form>
+      </div>
+
       <div class="card inner-card">
         <h3>Назначить тег (админ)</h3>
         <form method="post" action="/profiles/{{ profile.username }}/tags" class="form form-inline-row">

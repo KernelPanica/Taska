@@ -14,7 +14,42 @@
     <div class="alert alert-error">{{ error }}</div>
   {% endif %}
 
+  <div class="card social-profile-header">
+    <div class="social-profile-avatar-wrap">
+      {% if user.avatar_data %}
+        <img src="/avatars/{{ user.id }}" class="avatar-preview" alt="Аватар">
+      {% elif user.discord_avatar_url %}
+        <img src="{{ user.discord_avatar_url }}" class="avatar-preview" alt="Аватар Discord">
+      {% else %}
+        <span class="avatar-preview avatar-fallback">{{ (user.display_name or user.username)[0] | upper }}</span>
+      {% endif %}
+    </div>
+    <div class="social-profile-content">
+      <div class="social-profile-title">
+        <div><h1>{{ user.display_name or user.username }}</h1><p class="muted">@{{ user.username }}</p></div>
+        <span class="badge badge-active">{{ position_label }}</span>
+      </div>
+      <div class="tag-list social-profile-tags">
+        {% for tag in user.tags %}<span class="tag">{{ tag.name }}</span>
+        {% else %}<span class="muted">Теги не назначены</span>{% endfor %}
+      </div>
+      <div class="avatar-settings-actions">
+        <form method="post" action="/account/avatar" enctype="multipart/form-data" class="avatar-upload-form">
+          <input type="file" name="avatar" accept="image/png,image/jpeg,image/webp,image/gif" required>
+          <button type="submit" class="btn btn-ghost btn-sm">Загрузить</button>
+        </form>
+        {% if user.avatar_data %}
+          <form method="post" action="/account/avatar/delete">
+            <button type="submit" class="btn btn-ghost btn-sm">Удалить свой аватар</button>
+          </form>
+        {% endif %}
+        <small class="muted">До 2 МБ. Затем используется Discord или первая буква ника.</small>
+      </div>
+    </div>
+  </div>
+
   <div class="split-layout">
+
     <form method="post" action="/account" class="card form">
       <h2>Основное</h2>
 
@@ -39,10 +74,10 @@
         {% endif %}
       </dl>
 
-      <h2>Смена пароля</h2>
+      <h2>{{ 'Задать пароль' if not user.has_password else 'Смена пароля' }}</h2>
       <label>
-        Текущий пароль
-        <input type="password" name="current_password" autocomplete="current-password">
+        {% if user.has_password %}Текущий пароль{% else %}Текущий пароль не требуется{% endif %}
+        <input type="password" name="current_password" autocomplete="current-password" {% if not user.has_password %}disabled{% endif %}>
       </label>
       <label>
         Новый пароль
@@ -58,7 +93,21 @@
 
     <div class="card">
       <h2>Привязка аккаунтов</h2>
-      <p class="muted">После привязки можно входить через GitHub или Telegram.</p>
+      <p class="muted">После привязки можно входить через GitHub, Telegram или Discord.</p>
+
+      <div class="oauth-block">
+        <h3>Discord</h3>
+        {% if user.discord_id %}
+          <p>Привязан: <strong>{{ user.discord_username }}</strong></p>
+          <form method="post" action="/account/unlink/discord">
+            <button type="submit" class="btn btn-ghost">Отвязать</button>
+          </form>
+        {% elif discord_configured %}
+          <a href="/account/link/discord" class="btn btn-oauth btn-discord">Привязать Discord</a>
+        {% else %}
+          <p class="muted">Discord OAuth не настроен (TASKA_DISCORD_CLIENT_ID)</p>
+        {% endif %}
+      </div>
 
       <div class="oauth-block">
         <h3>GitHub</h3>
@@ -112,14 +161,6 @@
         </div>
       </div>
 
-      <h2>Мои теги</h2>
-      <div class="tag-list">
-        {% for tag in user.tags %}
-          <span class="tag">{{ tag.name }}</span>
-        {% else %}
-          <span class="muted">Теги не назначены</span>
-        {% endfor %}
-      </div>
       <p><a href="/profiles/{{ user.username }}">Предложить тег →</a></p>
     </div>
   </div>

@@ -11,7 +11,6 @@ from taska.config import get_settings
 from taska.database import Base, get_db
 from taska.main import app
 from taska.models.user import User
-from taska.services.token_generator import build_member_token
 
 os.environ.setdefault("TASKA_DATABASE_URL", "sqlite://")
 os.environ.setdefault("TASKA_SECRET_KEY", "test-secret-key-for-tests")
@@ -97,7 +96,6 @@ def member_user(client):
             username="dev1",
             password_hash=hash_password("memberpass"),
             is_admin=False,
-            member_token=build_member_token("B-M", 2, "Dev One"),
             display_name="Dev One",
             position_code="B-M",
             experience_years=2,

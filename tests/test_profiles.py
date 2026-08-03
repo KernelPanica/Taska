@@ -1,4 +1,3 @@
-import pytest
 from sqlalchemy import select
 
 from taska.database import get_db

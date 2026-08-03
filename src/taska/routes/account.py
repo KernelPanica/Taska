@@ -1,20 +1,31 @@
 from pathlib import Path
 from urllib.parse import quote, unquote
 
-from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from taska.auth.dependencies import get_current_user
-from taska.auth.oauth import github_configured, start_github_oauth, telegram_configured
+from taska.auth.oauth import (
+    discord_configured,
+    github_configured,
+    start_discord_oauth,
+    start_github_oauth,
+    telegram_configured,
+)
 from taska.auth.security import create_oauth_link_token, hash_password, verify_password
 from taska.config import get_settings
 from taska.database import get_db
 from taska.models.passkey import PasskeyCredential
 from taska.models.user import User
-from taska.services.account import unlink_github, unlink_telegram, update_user_profile
+from taska.services.account import (
+    unlink_discord,
+    unlink_github,
+    unlink_telegram,
+    update_user_profile,
+)
 from taska.services.bootstrap import get_site_context
 from taska.services.profiles import get_position_label
 
@@ -62,6 +73,7 @@ def account_page(
             "position_label": get_position_label(profile.position_code),
             "github_configured": github_configured(),
             "telegram_configured": telegram_configured(),
+            "discord_configured": discord_configured(),
             "telegram_bot_username": settings.telegram_bot_username,
             "passkeys": passkeys,
             "success": unquote(success) if success else None,
@@ -100,7 +112,7 @@ def account_update(
         return RedirectResponse(f"/account?error={quote(str(exc))}", status_code=303)
 
     if new_password:
-        if not verify_password(current_password, current.password_hash):
+        if current.has_password and not verify_password(current_password, current.password_hash):
             return RedirectResponse(
                 f"/account?error={quote('Неверный текущий пароль')}",
                 status_code=303,
@@ -116,6 +128,7 @@ def account_update(
                 status_code=303,
             )
         current.password_hash = hash_password(new_password)
+        current.has_password = True
         db.commit()
 
     return RedirectResponse(f"/account?success={quote('Профиль обновлён')}", status_code=303)
@@ -127,6 +140,14 @@ def account_link_github(user: User | None = Depends(get_current_user)):
     if isinstance(current, RedirectResponse):
         return current
     return start_github_oauth(link_username=current.username)
+
+
+@router.get("/account/link/discord")
+def account_link_discord(user: User | None = Depends(get_current_user)):
+    current = _require_login(user)
+    if isinstance(current, RedirectResponse):
+        return current
+    return start_discord_oauth(link_username=current.username)
 
 
 @router.get("/account/link/telegram")
@@ -171,3 +192,66 @@ def account_unlink_telegram(
 
     unlink_telegram(db, current)
     return RedirectResponse(f"/account?success={quote('Telegram отвязан')}", status_code=303)
+
+
+@router.post("/account/unlink/discord")
+def account_unlink_discord(
+    user: User | None = Depends(get_current_user), db: Session = Depends(get_db)
+) -> RedirectResponse:
+    current = _require_login(user)
+    if isinstance(current, RedirectResponse):
+        return current
+    unlink_discord(db, current)
+    return RedirectResponse(f"/account?success={quote('Discord отвязан')}", status_code=303)
+
+
+@router.post("/account/avatar")
+@router.post("/account/avatar/", include_in_schema=False)
+async def account_avatar_upload(
+    avatar: UploadFile = File(...),
+    user: User | None = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> RedirectResponse:
+    current = _require_login(user)
+    if isinstance(current, RedirectResponse):
+        return current
+    allowed_types = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+    if avatar.content_type not in allowed_types:
+        return RedirectResponse(
+            f"/account?error={quote('Поддерживаются PNG, JPEG, WebP и GIF')}", status_code=303
+        )
+    content = await avatar.read(2 * 1024 * 1024 + 1)
+    if len(content) > 2 * 1024 * 1024:
+        return RedirectResponse(
+            f"/account?error={quote('Аватар должен быть не больше 2 МБ')}", status_code=303
+        )
+    current.avatar_data = content
+    current.avatar_mime = avatar.content_type
+    db.commit()
+    return RedirectResponse(f"/account?success={quote('Аватар обновлён')}", status_code=303)
+
+
+@router.post("/account/avatar/delete")
+@router.post("/account/avatar/delete/", include_in_schema=False)
+def account_avatar_delete(
+    user: User | None = Depends(get_current_user), db: Session = Depends(get_db)
+) -> RedirectResponse:
+    current = _require_login(user)
+    if isinstance(current, RedirectResponse):
+        return current
+    current.avatar_data = None
+    current.avatar_mime = None
+    db.commit()
+    return RedirectResponse(f"/account?success={quote('Свой аватар удалён')}", status_code=303)
+
+
+@router.get("/avatars/{user_id}")
+def avatar_image(user_id: int, db: Session = Depends(get_db)) -> Response:
+    profile = db.get(User, user_id)
+    if profile is None or not profile.avatar_data or not profile.avatar_mime:
+        return Response(status_code=404)
+    return Response(
+        content=profile.avatar_data,
+        media_type=profile.avatar_mime,
+        headers={"Cache-Control": "private, max-age=3600"},
+    )

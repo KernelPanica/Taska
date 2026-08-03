@@ -1,9 +1,13 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Table, func
+from sqlalchemy import Column, DateTime, ForeignKey, String, Table, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from taska.database import Base
+
+if TYPE_CHECKING:
+    from taska.models.user import User
 
 user_tags = Table(
     "user_tags",

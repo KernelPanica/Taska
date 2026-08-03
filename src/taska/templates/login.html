@@ -5,7 +5,7 @@
 {% block content %}
 <section class="card card-narrow login-card">
   <h1>Вход</h1>
-  <p class="muted">Логин и пароль или привязанные GitHub / Telegram.</p>
+  <p class="muted">Логин и пароль или привязанные GitHub, Telegram и Discord.</p>
 
   {% if error %}
     <div class="alert alert-error">{{ error }}</div>
@@ -26,12 +26,15 @@
     <button type="submit" class="btn btn-primary btn-block">Войти</button>
   </form>
 
-  {% if github_configured or telegram_configured %}
+  {% if github_configured or telegram_configured or discord_configured %}
     <div class="oauth-divider"><span>или</span></div>
 
     <div class="oauth-login-buttons">
       {% if github_configured %}
         <a href="/auth/github" class="btn btn-oauth btn-github btn-block">Войти через GitHub</a>
+      {% endif %}
+      {% if discord_configured %}
+        <a href="/auth/discord" class="btn btn-oauth btn-discord btn-block">Войти через Discord</a>
       {% endif %}
       {% if telegram_configured %}
         <div class="telegram-login-wrap">
@@ -43,7 +46,7 @@
         </div>
       {% endif %}
     </div>
-    <p class="muted oauth-hint">Сначала привяжите аккаунт в профиле после входа по паролю.</p>
+    <p class="muted oauth-hint">Регистрация доступна только по приглашению. После неё привяжите нужный сервис в профиле.</p>
   {% endif %}
   <div class="oauth-divider"><span>passkey</span></div>
   <button type="button" class="btn btn-oauth btn-block" data-passkey-login hidden>
