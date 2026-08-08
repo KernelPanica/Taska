@@ -1,4 +1,6 @@
-from sqlalchemy import select
+import secrets
+
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
 from taska.constants import (
@@ -8,6 +10,7 @@ from taska.constants import (
     TASK_STATUS_IN_PROGRESS,
     TASK_STATUS_UNASSIGNED,
 )
+from taska.models.configuration import WorkflowStatus
 from taska.models.project import (
     Project,
     Task,
@@ -25,6 +28,43 @@ def is_pm(user: User) -> bool:
     if user.is_admin:
         return True
     return bool(user.position_code and user.position_code.startswith(PM_POSITION_PREFIX))
+
+
+def get_project_statuses(db: Session, project_id: int) -> dict[str, str]:
+    from taska.constants import TASK_STATUSES
+
+    custom = db.scalars(
+        select(WorkflowStatus)
+        .where(WorkflowStatus.project_id == project_id)
+        .order_by(WorkflowStatus.position, WorkflowStatus.id)
+    ).all()
+    return {**TASK_STATUSES, **{status.code: status.name for status in custom}}
+
+
+def create_project_status(
+    db: Session, user: User, project: Project, *, name: str
+) -> WorkflowStatus:
+    if not is_pm(user):
+        raise ValueError("Добавлять статусы могут только PM")
+    clean_name = name.strip()
+    if not clean_name:
+        raise ValueError("Введите название статуса")
+    existing_names = {value.casefold() for value in get_project_statuses(db, project.id).values()}
+    if clean_name.casefold() in existing_names:
+        raise ValueError("Статус с таким названием уже существует")
+    position = db.scalar(
+        select(func.max(WorkflowStatus.position)).where(WorkflowStatus.project_id == project.id)
+    ) or 0
+    status = WorkflowStatus(
+        project_id=project.id,
+        name=clean_name[:64],
+        code=f"custom_{secrets.token_hex(6)}",
+        position=position + 1,
+    )
+    db.add(status)
+    db.commit()
+    db.refresh(status)
+    return status
 
 
 def list_projects(db: Session) -> list[Project]:
@@ -216,9 +256,7 @@ def update_task_status(db: Session, pm: User, task: Task, new_status: str) -> Ta
     if not is_pm(pm):
         raise ValueError("Менять статус могут только PM")
 
-    from taska.constants import TASK_STATUSES
-
-    if new_status not in TASK_STATUSES:
+    if new_status not in get_project_statuses(db, task.project_id):
         raise ValueError("Неизвестный статус")
 
     task.status = new_status
@@ -276,11 +314,9 @@ def add_task_progress(
 def request_task_status(
     db: Session, user: User, task: Task, *, requested_status: str, message: str
 ) -> TaskStatusRequest:
-    from taska.constants import TASK_STATUSES
-
     if task.assignee_id != user.id:
         raise ValueError("Запрос на смену статуса может отправить только исполнитель")
-    if requested_status not in TASK_STATUSES:
+    if requested_status not in get_project_statuses(db, task.project_id):
         raise ValueError("Неизвестный статус")
     if requested_status == task.status:
         raise ValueError("Задача уже находится в этом статусе")

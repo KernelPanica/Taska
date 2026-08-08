@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Kanban — {{ project.name }}{% endblock %}
+{% block content %}
+<section>
+  <div class="kanban-toolbar">
+    <div class="kanban-heading">
+      <p class="kanban-breadcrumb"><a href="/projects">Проекты</a><span>/</span><a href="/projects/{{ project.id }}">{{ project.name }}</a></p>
+      <h1>Kanban-доска</h1>
+    </div>
+    <div class="kanban-toolbar-actions">
+      <span class="kanban-total">{{ project.tasks | length }} задач</span>
+      <a href="/projects/{{ project.id }}" class="btn btn-ghost">Список</a>
+    </div>
+  </div>
+  <div class="kanban-controls">
+    <div class="kanban-view-tabs"><span class="active">Kanban</span><a href="/projects/{{ project.id }}">Задачи</a></div>
+    {% if is_pm %}
+    <form method="post" action="/projects/{{ project.id }}/statuses" class="form-inline-row kanban-status-form">
+      <input name="name" maxlength="64" placeholder="Новый статус" required>
+      <button class="btn btn-primary" type="submit">+ Статус</button>
+    </form>
+    {% endif %}
+  </div>
+  {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
+  {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+  <div class="kanban-board">
+    {% for code, label in statuses.items() %}
+    <section class="kanban-column" data-status="{{ code }}">
+      <header><span class="kanban-column-color status-color-{{ loop.index0 % 7 }}"></span><h2>{{ label }}</h2><span class="kanban-count">{{ columns.get(code, []) | length }}</span><button type="button" class="kanban-column-menu" aria-label="Меню колонки">•••</button></header>
+      <div class="kanban-cards">
+        {% for task in columns.get(code, []) %}
+        <article class="kanban-card" draggable="true" data-task-id="{{ task.id }}">
+          <div class="kanban-card-top"><span class="kanban-ticket-id">#{{ task.id }}</span><button type="button" aria-label="Действия">•••</button></div>
+          <h3><a href="/projects/{{ project.id }}/tasks/{{ task.id }}">{{ task.title }}</a></h3>
+          {% if task.description %}<p class="kanban-card-description">{{ task.description | truncate(100) }}</p>{% endif %}
+          {% if task.required_tags %}<div class="kanban-card-tags">{% for tag in task.required_tags %}<span>{{ tag.name }}</span>{% endfor %}</div>{% endif %}
+          <footer>
+            <div class="kanban-card-meta"><span title="Комментарии">☰ {{ task.progress_updates | length }}</span>{% if task.due_date %}<time>◷ {{ task.due_date }}</time>{% endif %}</div>
+            {% if task.assignee %}<a class="kanban-assignee" href="/profiles/{{ task.assignee.username }}" title="{{ task.assignee.display_name or task.assignee.username }}">{% if task.assignee.avatar_data %}<img src="/avatars/{{ task.assignee.id }}" alt="">{% elif task.assignee.discord_avatar_url %}<img src="{{ task.assignee.discord_avatar_url }}" alt="">{% else %}{{ (task.assignee.display_name or task.assignee.username)[0] | upper }}{% endif %}</a>{% else %}<span class="kanban-unassigned" title="Не назначена">?</span>{% endif %}
+          </footer>
+          {% if is_pm %}
+          <form method="post" action="/projects/{{ project.id }}/tasks/{{ task.id }}/status" class="kanban-status-select">
+            <select name="status" aria-label="Изменить статус" onchange="this.form.submit()">
+              {% for target_code, target_label in statuses.items() %}<option value="{{ target_code }}" {% if target_code == task.status %}selected{% endif %}>{{ target_label }}</option>{% endfor %}
+            </select>
+          </form>
+          {% endif %}
+        </article>
+        {% else %}<div class="kanban-empty"><span>＋</span><p>Перетащите задачи сюда</p></div>{% endfor %}
+      </div>
+      {% if is_pm %}<a class="kanban-add-card" href="/projects/{{ project.id }}">＋ Добавить задачу</a>{% endif %}
+    </section>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}<script src="/static/js/kanban.js" defer></script>{% endblock %}

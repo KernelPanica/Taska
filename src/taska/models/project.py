@@ -25,6 +25,7 @@ class Project(Base):
     name: Mapped[str] = mapped_column(String(128))
     description: Mapped[str] = mapped_column(Text, default="")
     created_by_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    space_id: Mapped[int | None] = mapped_column(ForeignKey("spaces.id"), nullable=True, index=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
@@ -44,6 +45,9 @@ class Task(Base):
     status: Mapped[str] = mapped_column(String(32), default="unassigned")
     created_by_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     assignee_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    ticket_type_id: Mapped[int | None] = mapped_column(ForeignKey("ticket_types.id"), nullable=True)
+    parent_id: Mapped[int | None] = mapped_column(ForeignKey("tasks.id"), nullable=True, index=True)
+    due_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     enforce_single_task: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(

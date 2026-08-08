@@ -16,6 +16,7 @@
   <div class="profile-detail card">
     <h1>{{ project.name }}</h1>
     <p class="muted">{{ project.description or "Без описания" }}</p>
+    <p><a href="/projects/{{ project.id }}/board" class="btn btn-primary">Открыть Kanban</a></p>
   </div>
 
   {% if is_pm %}

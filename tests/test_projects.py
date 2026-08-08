@@ -259,7 +259,6 @@ def test_assignee_requests_status_and_pm_approves(client, pm_user, member_user):
         follow_redirects=False,
     )
     assert response.status_code == 303
-
     db_gen = override()
     db = next(db_gen)
     try:
@@ -268,14 +267,12 @@ def test_assignee_requests_status_and_pm_approves(client, pm_user, member_user):
         assert status_request.status == "pending"
     finally:
         db_gen.close()
-
     client.post("/login", data={"username": "pm1", "password": "pmpass"})
     response = client.post(
         f"/projects/{project_id}/tasks/{task_id}/status-requests/{request_id}/approve",
         follow_redirects=False,
     )
     assert response.status_code == 303
-
     db_gen = override()
     db = next(db_gen)
     try:
@@ -292,3 +289,26 @@ def test_assignee_requests_status_and_pm_approves(client, pm_user, member_user):
         assert notification is not None
     finally:
         db_gen.close()
+
+
+def test_pm_can_add_custom_status_and_use_kanban(client, pm_user):
+    override = app.dependency_overrides[get_db]
+    db_gen = override()
+    db = next(db_gen)
+    try:
+        project = Project(name="Kanban", description="", created_by_id=pm_user.id)
+        db.add(project)
+        db.commit()
+        project_id = project.id
+    finally:
+        db_gen.close()
+    client.post("/login", data={"username": "pm1", "password": "pmpass"})
+    response = client.post(
+        f"/projects/{project_id}/statuses",
+        data={"name": "Готово к релизу"},
+        follow_redirects=False,
+    )
+    assert response.status_code == 303
+    response = client.get(f"/projects/{project_id}/board")
+    assert response.status_code == 200
+    assert "Готово к релизу" in response.text

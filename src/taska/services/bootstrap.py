@@ -14,6 +14,28 @@ from taska.utils.datetime import utc_now
 def init_db() -> None:
     Base.metadata.create_all(bind=engine)
     _migrate_user_profile_columns()
+    _migrate_project_columns()
+
+
+def _migrate_project_columns() -> None:
+    inspector = inspect(engine)
+    alterations = {
+        "projects": {"space_id": "INTEGER"},
+        "tasks": {
+            "ticket_type_id": "INTEGER",
+            "parent_id": "INTEGER",
+            "due_date": "DATETIME",
+        },
+    }
+    with engine.begin() as connection:
+        tables = set(inspector.get_table_names())
+        for table, columns_to_add in alterations.items():
+            if table not in tables:
+                continue
+            existing = {column["name"] for column in inspector.get_columns(table)}
+            for name, column_type in columns_to_add.items():
+                if name not in existing:
+                    connection.execute(text(f"ALTER TABLE {table} ADD COLUMN {name} {column_type}"))
 
 
 def _migrate_user_profile_columns() -> None:

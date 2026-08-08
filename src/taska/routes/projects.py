@@ -8,7 +8,6 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from taska.auth.dependencies import get_current_user
-from taska.constants import TASK_STATUSES
 from taska.database import get_db
 from taska.models.project import TaskAttachment
 from taska.models.user import User
@@ -19,8 +18,10 @@ from taska.services.projects import (
     apply_for_task,
     approve_application,
     create_project,
+    create_project_status,
     create_task,
     get_project,
+    get_project_statuses,
     get_task,
     is_pm,
     list_projects,
@@ -111,7 +112,7 @@ def project_detail(
             "project": project,
             "site": site,
             "is_pm": is_pm(current),
-            "statuses": TASK_STATUSES,
+            "statuses": get_project_statuses(db, project.id),
             "all_tags": list_all_tags(db) if is_pm(current) else [],
             "error": unquote(error) if error else None,
             "success": unquote(success) if success else None,
@@ -188,7 +189,7 @@ def task_detail(
             "project": task.project,
             "site": site,
             "is_pm": is_pm(current),
-            "statuses": TASK_STATUSES,
+            "statuses": get_project_statuses(db, task.project_id),
             "can_apply": can_apply,
             "pending_applications": pending_applications_for_task(db, task.id)
             if is_pm(current)
@@ -329,6 +330,65 @@ def change_task_status(
     return RedirectResponse(
         f"/projects/{project_id}/tasks/{task_id}?success={quote('Статус обновлён')}",
         status_code=303,
+    )
+
+
+@router.get("/projects/{project_id}/board", response_class=HTMLResponse)
+def project_board(
+    request: Request,
+    project_id: int,
+    user: User | None = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    error: str | None = None,
+    success: str | None = None,
+):
+    current = _require_login(user)
+    if isinstance(current, RedirectResponse):
+        return current
+    project = get_project(db, project_id)
+    if project is None:
+        return RedirectResponse("/projects", status_code=303)
+    statuses = get_project_statuses(db, project.id)
+    columns = {code: [] for code in statuses}
+    for task in project.tasks:
+        columns.setdefault(task.status, []).append(task)
+    return templates.TemplateResponse(
+        request,
+        "projects/board.html",
+        {
+            "user": current,
+            "site": get_site_context(db),
+            "project": project,
+            "statuses": statuses,
+            "columns": columns,
+            "is_pm": is_pm(current),
+            "error": unquote(error) if error else None,
+            "success": unquote(success) if success else None,
+        },
+    )
+
+
+@router.post("/projects/{project_id}/statuses")
+def add_project_status(
+    project_id: int,
+    name: str = Form(...),
+    user: User | None = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> RedirectResponse:
+    current = _require_login(user)
+    if isinstance(current, RedirectResponse):
+        return current
+    project = get_project(db, project_id)
+    if project is None:
+        return RedirectResponse("/projects", status_code=303)
+    try:
+        create_project_status(db, current, project, name=name)
+    except ValueError as exc:
+        return RedirectResponse(
+            f"/projects/{project_id}/board?error={quote(str(exc))}", status_code=303
+        )
+    return RedirectResponse(
+        f"/projects/{project_id}/board?success={quote('Статус добавлен')}", status_code=303
     )
 
 
