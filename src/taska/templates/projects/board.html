@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% block title %}Kanban — {{ project.name }}{% endblock %}
+{% block main_class %}kanban-main{% endblock %}
 {% block content %}
-<section>
+<section class="kanban-page">
   <div class="kanban-toolbar">
     <div class="kanban-heading">
       <p class="kanban-breadcrumb"><a href="/projects">Проекты</a><span>/</span><a href="/projects/{{ project.id }}">{{ project.name }}</a></p>
@@ -29,8 +30,8 @@
       <header><span class="kanban-column-color status-color-{{ loop.index0 % 7 }}"></span><h2>{{ label }}</h2><span class="kanban-count">{{ columns.get(code, []) | length }}</span><button type="button" class="kanban-column-menu" aria-label="Меню колонки">•••</button></header>
       <div class="kanban-cards">
         {% for task in columns.get(code, []) %}
-        <article class="kanban-card" draggable="true" data-task-id="{{ task.id }}">
-          <div class="kanban-card-top"><span class="kanban-ticket-id">#{{ task.id }}</span><button type="button" aria-label="Действия">•••</button></div>
+        <article class="kanban-card" data-task-id="{{ task.id }}">
+          <div class="kanban-card-top"><span class="kanban-ticket-id">#{{ task.id }}</span>{% if is_pm %}<span class="kanban-drag-handle" draggable="true" role="button" tabindex="0" title="Перетащить задачу" aria-label="Перетащить задачу">⠿</span>{% endif %}</div>
           <h3><a href="/projects/{{ project.id }}/tasks/{{ task.id }}">{{ task.title }}</a></h3>
           {% if task.description %}<p class="kanban-card-description">{{ task.description | truncate(100) }}</p>{% endif %}
           {% if task.required_tags %}<div class="kanban-card-tags">{% for tag in task.required_tags %}<span>{{ tag.name }}</span>{% endfor %}</div>{% endif %}
@@ -40,6 +41,8 @@
           </footer>
           {% if is_pm %}
           <form method="post" action="/projects/{{ project.id }}/tasks/{{ task.id }}/status" class="kanban-status-select">
+            <input type="hidden" name="return_to" value="board">
+            <input type="hidden" name="ajax" value="0">
             <select name="status" aria-label="Изменить статус" onchange="this.form.submit()">
               {% for target_code, target_label in statuses.items() %}<option value="{{ target_code }}" {% if target_code == task.status %}selected{% endif %}>{{ target_label }}</option>{% endfor %}
             </select>

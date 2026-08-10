@@ -10,25 +10,27 @@
   <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
+  <div class="page-loader" aria-hidden="true"><span class="page-loader-mark">T</span><span class="page-loader-bar"></span></div>
   <header class="header">
     <div class="container header-inner">
-      <a href="/" class="logo"><span class="logo-mark">T</span><span>{{ site.app_name if site is defined else 'Taska' }}</span></a>
-      <nav class="header-actions" aria-label="Основная навигация">
+      <div class="header-start">
         {% if user %}
           <div class="dropdown" data-dropdown>
-            <button class="icon-button menu-button" type="button" aria-label="Открыть меню" aria-expanded="false" data-dropdown-toggle>
+            <button class="icon-button menu-button" type="button" aria-label="Открыть доступные страницы" aria-expanded="false" data-dropdown-toggle>
               <span></span><span></span><span></span>
             </button>
             <div class="dropdown-panel nav-menu" data-dropdown-panel hidden>
-              <p class="dropdown-title">Навигация</p>
-              <a href="/">Дашборд</a>
-              <a href="/projects">Проекты</a>
-              <a href="/profiles">Команда</a>
+              <p class="dropdown-title">Доступные страницы</p>
+              <a href="/"><span>⌂</span> Дашборд</a>
+              <a href="/projects"><span>▦</span> Проекты</a>
+              <a href="/profiles"><span>◉</span> Команда</a>
+              <a href="/notifications"><span>♢</span> Уведомления</a>
+              <a href="/account"><span>●</span> Мой профиль</a>
               {% if user.is_admin %}
                 <div class="dropdown-separator"></div>
                 <p class="dropdown-title">Администрирование</p>
-                <a href="/admin">Панель</a>
-                <a href="/admin/invitations">Приглашения</a>
+                <a href="/admin"><span>⚙</span> Панель</a>
+                <a href="/admin/invitations"><span>＋</span> Приглашения</a>
               {% endif %}
               <div class="dropdown-separator"></div>
               <label class="theme-control">
@@ -41,6 +43,11 @@
               </label>
             </div>
           </div>
+        {% endif %}
+        <a href="/" class="logo"><span class="logo-mark">T</span><span>{{ site.app_name if site is defined else 'Taska' }}</span></a>
+      </div>
+      <nav class="header-actions" aria-label="Пользовательские действия">
+        {% if user %}
 
           <a href="/notifications" class="icon-button notification-button" aria-label="Уведомления">
             <span class="bell-icon" aria-hidden="true"></span>
@@ -74,10 +81,11 @@
     </div>
   </header>
 
-  <main class="container main">
+  <main class="container main {% block main_class %}{% endblock %}">
     {% block content %}{% endblock %}
   </main>
   <script src="/static/js/theme.js" defer></script>
+  <script>window.addEventListener('load',()=>document.body.classList.add('page-ready'));</script>
   {% block scripts %}{% endblock %}
 </body>
 </html>

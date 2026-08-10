@@ -19,6 +19,32 @@
     <p><a href="/projects/{{ project.id }}/board" class="btn btn-primary">Открыть Kanban</a></p>
   </div>
 
+  <section class="agile-section">
+    <div class="section-header">
+      <div><h2>Спринты</h2><p class="muted">Короткие циклы работы с одной измеримой целью.</p></div>
+    </div>
+    <div class="sprint-grid">
+      {% for sprint in project.sprints %}
+        <article class="sprint-card sprint-{{ sprint.status }}">
+          <div class="sprint-card-head"><h3>{{ sprint.name }}</h3><span class="badge">{{ "Запланирован" if sprint.status == "planned" else "Активен" if sprint.status == "active" else "Завершён" }}</span></div>
+          <p>{{ sprint.goal or "Цель спринта пока не указана" }}</p>
+          <small>{{ sprint.start_date }} — {{ sprint.end_date }}</small>
+        </article>
+      {% else %}
+        <div class="sprint-empty"><strong>Спринтов пока нет</strong><span>Создайте первый цикл планирования проекта.</span></div>
+      {% endfor %}
+    </div>
+    {% if is_pm %}
+      <form method="post" action="/projects/{{ project.id }}/sprints" class="card form sprint-form">
+        <h3>Новый спринт</h3>
+        <label>Название<input name="name" placeholder="Спринт 1" required maxlength="128"></label>
+        <label>Цель<textarea name="goal" rows="2" placeholder="Что должно измениться к концу спринта?"></textarea></label>
+        <div class="sprint-dates"><label>Начало<input type="date" name="start_date" required></label><label>Завершение<input type="date" name="end_date" required></label></div>
+        <button class="btn btn-primary" type="submit">Создать спринт</button>
+      </form>
+    {% endif %}
+  </section>
+
   {% if is_pm %}
     <div class="card inner-card">
       <h2>Новая задача</h2>

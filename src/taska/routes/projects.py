@@ -1,9 +1,10 @@
 from pathlib import Path
+from datetime import date
 from typing import Annotated
 from urllib.parse import quote, unquote
 
 from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
-from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
@@ -18,6 +19,7 @@ from taska.services.projects import (
     apply_for_task,
     approve_application,
     create_project,
+    create_sprint,
     create_project_status,
     create_task,
     get_project,
@@ -152,6 +154,41 @@ def create_task_submit(
         return RedirectResponse(f"/projects/{project_id}?error={quote(str(exc))}", status_code=303)
 
     return RedirectResponse(f"/projects/{project_id}/tasks/{task.id}", status_code=303)
+
+
+@router.post("/projects/{project_id}/sprints")
+def create_sprint_submit(
+    project_id: int,
+    name: str = Form(...),
+    goal: str = Form(""),
+    start_date: date = Form(...),
+    end_date: date = Form(...),
+    user: User | None = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> RedirectResponse:
+    current = _require_login(user)
+    if isinstance(current, RedirectResponse):
+        return current
+    project = get_project(db, project_id)
+    if project is None:
+        return RedirectResponse("/projects", status_code=303)
+    try:
+        create_sprint(
+            db,
+            current,
+            project,
+            name=name,
+            goal=goal,
+            start_date=start_date,
+            end_date=end_date,
+        )
+    except ValueError as exc:
+        return RedirectResponse(
+            f"/projects/{project_id}?error={quote(str(exc))}", status_code=303
+        )
+    return RedirectResponse(
+        f"/projects/{project_id}?success={quote('Спринт создан')}", status_code=303
+    )
 
 
 @router.get("/projects/{project_id}/tasks/{task_id}", response_class=HTMLResponse)
@@ -308,6 +345,8 @@ def change_task_status(
     project_id: int,
     task_id: int,
     status: str = Form(...),
+    return_to: str = Form("task"),
+    ajax: str = Form("0"),
     user: User | None = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> RedirectResponse:
@@ -322,11 +361,25 @@ def change_task_status(
     try:
         update_task_status(db, current, task, status)
     except ValueError as exc:
+        if return_to == "board":
+            if ajax == "1":
+                return JSONResponse({"ok": False, "error": str(exc)}, status_code=400)
+            return RedirectResponse(
+                f"/projects/{project_id}/board?error={quote(str(exc))}",
+                status_code=303,
+            )
         return RedirectResponse(
             f"/projects/{project_id}/tasks/{task_id}?error={quote(str(exc))}",
             status_code=303,
         )
 
+    if return_to == "board":
+        if ajax == "1":
+            return JSONResponse({"ok": True, "task_id": task.id, "status": status})
+        return RedirectResponse(
+            f"/projects/{project_id}/board?success={quote('Статус обновлён')}",
+            status_code=303,
+        )
     return RedirectResponse(
         f"/projects/{project_id}/tasks/{task_id}?success={quote('Статус обновлён')}",
         status_code=303,

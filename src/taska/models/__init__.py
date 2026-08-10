@@ -13,6 +13,7 @@ from taska.models.notification import Notification
 from taska.models.passkey import PasskeyCredential
 from taska.models.project import (
     Project,
+    Sprint,
     Task,
     TaskApplication,
     TaskAttachment,
@@ -36,6 +37,7 @@ __all__ = [
     "WorkflowStatus",
     "WorkflowTransition",
     "Project",
+    "Sprint",
     "SiteSettings",
     "Tag",
     "TagSuggestion",

@@ -1,4 +1,5 @@
 import secrets
+from datetime import date
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
@@ -13,11 +14,13 @@ from taska.constants import (
 from taska.models.configuration import WorkflowStatus
 from taska.models.project import (
     Project,
+    Sprint,
     Task,
     TaskApplication,
     TaskProgress,
     TaskStatusRequest,
 )
+
 from taska.models.tag import Tag
 from taska.models.user import User
 from taska.services.notifications import create_notification, notify_users, pm_user_ids
@@ -28,6 +31,36 @@ def is_pm(user: User) -> bool:
     if user.is_admin:
         return True
     return bool(user.position_code and user.position_code.startswith(PM_POSITION_PREFIX))
+
+
+def create_sprint(
+    db: Session,
+    user: User,
+    project: Project,
+    *,
+    name: str,
+    goal: str,
+    start_date: date,
+    end_date: date,
+) -> Sprint:
+    if not is_pm(user):
+        raise ValueError("Создавать спринты могут только PM")
+    clean_name = name.strip()
+    if not clean_name:
+        raise ValueError("Введите название спринта")
+    if end_date < start_date:
+        raise ValueError("Дата завершения не может быть раньше даты начала")
+    sprint = Sprint(
+        project_id=project.id,
+        name=clean_name[:128],
+        goal=goal.strip(),
+        start_date=start_date,
+        end_date=end_date,
+    )
+    db.add(sprint)
+    db.commit()
+    db.refresh(sprint)
+    return sprint
 
 
 def get_project_statuses(db: Session, project_id: int) -> dict[str, str]:
@@ -83,6 +116,7 @@ def get_project(db: Session, project_id: int) -> Project | None:
         select(Project)
         .where(Project.id == project_id)
         .options(
+            selectinload(Project.sprints),
             selectinload(Project.tasks).selectinload(Task.required_tags),
             selectinload(Project.tasks).selectinload(Task.assignee),
             selectinload(Project.tasks).selectinload(Task.applications),
