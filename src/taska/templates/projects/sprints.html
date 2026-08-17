@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Спринты — {{ project.name }}{% endblock %}
+{% block main_class %}sp-main{% endblock %}
+{% block content %}
+<section class="sp-page" data-project-id="{{ project.id }}">
+  <header class="sp-header">
+    <div>
+      <p class="sp-breadcrumb"><a href="/projects">Проекты</a><span>/</span>{{ project.name }}</p>
+      <h1>Спринты</h1>
+    </div>
+    <nav class="sp-view-nav"><a href="/projects/{{ project.id }}/board">Kanban</a><span>Спринты</span></nav>
+  </header>
+
+  {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
+  {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+
+  <div class="sp-picker">
+    <div class="sp-picker-scroll">
+      {% for sprint in project.sprints %}
+        <a class="sp-picker-item{% if selected_sprint and selected_sprint.id == sprint.id %} is-selected{% endif %}" href="/projects/{{ project.id }}/sprints/{{ sprint.id }}">
+          <i class="is-{{ sprint.status }}"></i>
+          <span><strong>{{ sprint.name }}</strong><small>{{ "Активен" if sprint.status == "active" else "Завершён" if sprint.status == "completed" else "Запланирован" }}</small></span>
+        </a>
+      {% else %}<span class="sp-picker-empty">Спринтов пока нет</span>{% endfor %}
+    </div>
+    {% if is_pm %}<button class="sp-create-toggle" type="button" data-toggle-create>＋ Создать</button>{% endif %}
+  </div>
+
+  {% if is_pm %}
+    <form id="create-sprint" class="sp-create" method="post" action="/projects/{{ project.id }}/sprints" hidden>
+      <label>Название<input name="name" required maxlength="128" placeholder="Спринт 1"></label>
+      <label class="sp-create-goal">Цель<input name="goal" placeholder="Какой результат должен получить проект?"></label>
+      <label>Начало<input type="date" name="start_date" required></label>
+      <label>Завершение<input type="date" name="end_date" required></label>
+      <button class="btn btn-primary" type="submit">Создать</button>
+    </form>
+  {% endif %}
+
+  {% if selected_sprint %}
+    <section class="sp-overview">
+      <div class="sp-overview-copy">
+        <span class="sp-state is-{{ selected_sprint.status }}">{{ "Активный" if selected_sprint.status == "active" else "Завершён" if selected_sprint.status == "completed" else "Планирование" }}</span>
+        <h2>{{ selected_sprint.name }}</h2>
+        <p>{{ selected_sprint.goal or "Цель спринта не указана" }}</p>
+        <small>{{ selected_sprint.start_date }} — {{ selected_sprint.end_date }}</small>
+      </div>
+      <div class="sp-progress">
+        <div class="sp-progress-value"><strong>{{ completion }}%</strong><span>готово</span></div>
+        <div class="sp-progress-track"><i style="width:{{ completion }}%"></i></div>
+        <div class="sp-progress-meta"><span>{{ done_count }} из {{ total_tasks }} задач</span><span>{{ done_points }} из {{ total_points }} SP</span></div>
+      </div>
+    </section>
+  {% else %}
+    <section class="sp-no-sprint"><h2>Создайте первый спринт</h2><p>После этого здесь появятся планирование, backlog и аналитика.</p></section>
+  {% endif %}
+
+  <div class="sp-section-head"><div><h2>Планирование</h2><p>Перетаскивайте задачи между областями</p></div></div>
+  <div class="sp-planning">
+    <section class="sp-lane" data-sprint-zone="{{ selected_sprint.id if selected_sprint else '' }}">
+      <header><div><h3>{{ selected_sprint.name if selected_sprint else "Текущий спринт" }}</h3><small>{{ total_tasks }} задач · {{ total_points }} SP</small></div></header>
+      <div class="sp-task-list">
+        {% if selected_sprint %}{% for task in selected_sprint.tasks %}
+          <article class="sp-task priority-{{ task.priority }}" data-task-id="{{ task.id }}" draggable="{{ 'true' if is_pm else 'false' }}">
+            <i></i><div class="sp-task-copy"><a href="/projects/{{ project.id }}/tasks/{{ task.id }}">{{ task.title }}</a><small>#{{ task.id }} · {{ statuses.get(task.status, task.status) }}{% if task.assignee %} · {{ task.assignee.display_name or task.assignee.username }}{% endif %}</small></div>
+            {% if is_pm %}<form method="post" action="/projects/{{ project.id }}/tasks/{{ task.id }}/planning"><input type="hidden" name="sprint_id" value="{{ selected_sprint.id }}"><select name="story_points" aria-label="Story Points" onchange="this.form.submit()">{% for point in [0,1,2,3,5,8,13,21] %}<option value="{{ point }}" {% if task.story_points == point %}selected{% endif %}>{{ point }} SP</option>{% endfor %}</select><select name="priority" aria-label="Приоритет" onchange="this.form.submit()">{% for code,label in [('low','Низкий'),('medium','Средний'),('high','Высокий'),('critical','Критичный')] %}<option value="{{ code }}" {% if task.priority == code %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></form>{% else %}<span class="sp-task-points">{{ task.story_points }} SP</span>{% endif %}
+          </article>
+        {% else %}<div class="sp-list-empty">Перенесите сюда задачи из backlog</div>{% endfor %}{% else %}<div class="sp-list-empty">Выберите спринт</div>{% endif %}
+      </div>
+    </section>
+    <section class="sp-lane sp-backlog" data-sprint-zone="">
+      <header><div><h3>Backlog</h3><small>{{ backlog|length }} задач вне спринтов</small></div></header>
+      <div class="sp-task-list">
+        {% for task in backlog %}
+          <article class="sp-task priority-{{ task.priority }}" data-task-id="{{ task.id }}" draggable="{{ 'true' if is_pm else 'false' }}">
+            <i></i><div class="sp-task-copy"><a href="/projects/{{ project.id }}/tasks/{{ task.id }}">{{ task.title }}</a><small>#{{ task.id }} · {{ statuses.get(task.status, task.status) }}</small></div>
+            {% if is_pm %}<form method="post" action="/projects/{{ project.id }}/tasks/{{ task.id }}/planning"><input type="hidden" name="sprint_id" value=""><select name="story_points" aria-label="Story Points" onchange="this.form.submit()">{% for point in [0,1,2,3,5,8,13,21] %}<option value="{{ point }}" {% if task.story_points == point %}selected{% endif %}>{{ point }} SP</option>{% endfor %}</select><input type="hidden" name="priority" value="{{ task.priority }}"></form>{% else %}<span class="sp-task-points">{{ task.story_points }} SP</span>{% endif %}
+          </article>
+        {% else %}<div class="sp-list-empty">Backlog пуст</div>{% endfor %}
+      </div>
+    </section>
+  </div>
+
+  <div class="sp-section-head"><div><h2>Аналитика</h2><p>Состояние выбранного спринта</p></div></div>
+  <div class="sp-analytics">
+    <section class="sp-panel sp-burndown"><header><h3>Burndown</h3><small>Оставшиеся Story Points</small></header><div class="sp-burn-chart">{% for item in burndown %}<div title="{{ item.day }}: {{ item.actual }} SP"><i class="sp-burn-ideal" style="bottom:{{ item.ideal / max_burn * 100 }}%"></i><i class="sp-burn-fact" style="height:{{ item.actual / max_burn * 100 }}%"></i><small>{{ item.day.strftime('%d.%m') }}</small></div>{% else %}<span class="sp-chart-empty">Нет данных</span>{% endfor %}</div></section>
+    <section class="sp-panel"><header><h3>Velocity</h3><small>Результаты завершённых спринтов</small></header><div class="sp-velocity">{% for item in velocity %}<div><i style="height:{{ item.points / max_velocity * 100 }}%"><b>{{ item.points }}</b></i><small>{{ item.name|truncate(12) }}</small></div>{% else %}<span class="sp-chart-empty">Нет завершённых спринтов</span>{% endfor %}</div></section>
+    <section class="sp-panel"><header><h3>Загрузка команды</h3><small>Задачи и Story Points</small></header><div class="sp-rows">{% for name,item in workload.items() %}<div><span>{{ name }}</span><strong>{{ item.tasks }} · {{ item.points }} SP</strong></div>{% else %}<span class="sp-chart-empty">Нет данных</span>{% endfor %}</div></section>
+    <section class="sp-panel"><header><h3>Распределение задач</h3><small>По статусам workflow</small></header><div class="sp-distribution">{% for code,label in statuses.items() %}<div><span>{{ label }}</span><i><b style="width:{{ totals.get(code,0) / total_tasks * 100 if total_tasks else 0 }}%"></b></i><strong>{{ totals.get(code,0) }}</strong></div>{% endfor %}</div></section>
+  </div>
+
+  {% if is_pm %}
+    <div class="sp-section-head"><div><h2>Управление</h2><p>Состояние спринта и ограничения Kanban</p></div></div>
+    <div class="sp-admin">
+      <section class="sp-panel"><header><h3>Спринт</h3></header>{% if selected_sprint %}{% if selected_sprint.status == 'planned' %}<form method="post" action="/projects/{{ project.id }}/sprints/{{ selected_sprint.id }}/state"><input type="hidden" name="action" value="start"><p>После запуска спринт станет активным для команды.</p><button class="btn btn-primary" type="submit">Запустить</button></form>{% elif selected_sprint.status == 'active' %}<form class="form" method="post" action="/projects/{{ project.id }}/sprints/{{ selected_sprint.id }}/state"><input type="hidden" name="action" value="complete"><label>Незавершённые задачи<select name="next_sprint_id"><option value="">Вернуть в backlog</option>{% for sprint in project.sprints if sprint.status == 'planned' and sprint.id != selected_sprint.id %}<option value="{{ sprint.id }}">Перенести в {{ sprint.name }}</option>{% endfor %}</select></label><label>Ретроспектива<textarea name="retrospective" rows="3"></textarea></label><button class="btn btn-primary" type="submit">Завершить</button></form>{% else %}<p>{{ selected_sprint.retrospective or "Ретроспектива не заполнена" }}</p>{% endif %}{% else %}<p>Спринт не выбран.</p>{% endif %}</section>
+      <section class="sp-panel"><header><h3>WIP-лимиты</h3><small>0 удаляет ограничение</small></header><div class="sp-wip">{% for code,label in statuses.items() %}<form method="post" action="/projects/{{ project.id }}/wip-limits"><input type="hidden" name="status" value="{{ code }}"><label>{{ label }}<input type="number" name="limit" min="0" value="{{ wip_limits.get(code,'') }}" placeholder="∞"></label><button type="submit" aria-label="Сохранить">✓</button></form>{% endfor %}</div></section>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}
+{% block scripts %}<script src="/static/js/sprints.js" defer></script>{% endblock %}

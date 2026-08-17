@@ -33,7 +33,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const updateCount = (column, delta) => {
     const count = column.querySelector(".kanban-count");
-    if (count) count.textContent = String(Math.max(0, Number(count.textContent) + delta));
+    if (count) {
+      const [current, limit] = count.textContent.trim().split("/");
+      const next = Math.max(0, Number(current) + delta);
+      count.textContent = limit ? `${next}/${limit}` : String(next);
+    }
+  };
+
+  const updateEmptyState = (column) => {
+    const cards = column?.querySelector(".kanban-cards");
+    if (!cards) return;
+    const empty = cards.querySelector(".kanban-empty");
+    const hasCards = cards.querySelector(".kanban-card");
+    if (hasCards) empty?.remove();
+    else if (!empty) cards.insertAdjacentHTML("beforeend", '<div class="kanban-empty"><span>＋</span><p>Перетащите задачи сюда</p></div>');
   };
 
   document.querySelectorAll(".kanban-card").forEach((card) => {
@@ -62,12 +75,17 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = new FormData(form);
       data.set("ajax", "1");
       const response = await fetch(form.action, { method: "POST", body: data, headers: { "Accept": "application/json" } });
-      if (!response.ok) { window.location.reload(); return; }
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}));
+        window.location.assign(`${window.location.pathname}?error=${encodeURIComponent(result.error || "Не удалось изменить статус")}`);
+        return;
+      }
       const target = document.querySelector(`.kanban-column[data-status="${CSS.escape(data.get("status"))}"]`);
       const source = card.closest(".kanban-column");
       if (target && source && target !== source) {
         target.querySelector(".kanban-cards").append(card);
         updateCount(source, -1); updateCount(target, 1);
+        updateEmptyState(source); updateEmptyState(target);
       }
     });
   });

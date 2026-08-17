@@ -5,7 +5,7 @@ tables so existing installations can migrate incrementally.
 """
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from taska.database import Base
@@ -40,6 +40,7 @@ class WorkflowStatus(Base):
     name: Mapped[str] = mapped_column(String(64))
     code: Mapped[str] = mapped_column(String(32))
     position: Mapped[int] = mapped_column(Integer, default=0)
+    wip_limit: Mapped[int | None] = mapped_column(Integer, nullable=True)
     project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"))
 
 
@@ -53,6 +54,15 @@ class WorkflowTransition(Base):
     to_status_id: Mapped[int] = mapped_column(
         ForeignKey("workflow_statuses.id", ondelete="CASCADE")
     )
+
+
+class WipLimit(Base):
+    __tablename__ = "wip_limits"
+    __table_args__ = (UniqueConstraint("project_id", "status", name="uq_wip_project_status"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), index=True)
+    status: Mapped[str] = mapped_column(String(32))
+    limit: Mapped[int] = mapped_column(Integer)
 
 
 class SavedFilter(Base):

@@ -48,9 +48,15 @@ class Sprint(Base):
     status: Mapped[str] = mapped_column(String(16), default="planned", index=True)
     start_date: Mapped[date] = mapped_column(Date, default=date.today)
     end_date: Mapped[date] = mapped_column(Date)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    retrospective: Mapped[str] = mapped_column(Text, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     project: Mapped[Project] = relationship(back_populates="sprints")
+    tasks: Mapped[list["Task"]] = relationship(back_populates="sprint")
+    snapshots: Mapped[list["SprintSnapshot"]] = relationship(
+        back_populates="sprint", cascade="all, delete-orphan", order_by="SprintSnapshot.recorded_on"
+    )
 
 
 class Task(Base):
@@ -65,6 +71,9 @@ class Task(Base):
     assignee_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     ticket_type_id: Mapped[int | None] = mapped_column(ForeignKey("ticket_types.id"), nullable=True)
     parent_id: Mapped[int | None] = mapped_column(ForeignKey("tasks.id"), nullable=True, index=True)
+    sprint_id: Mapped[int | None] = mapped_column(ForeignKey("sprints.id", ondelete="SET NULL"), nullable=True, index=True)
+    story_points: Mapped[int] = mapped_column(Integer, default=0)
+    priority: Mapped[str] = mapped_column(String(16), default="medium")
     due_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     enforce_single_task: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -73,6 +82,7 @@ class Task(Base):
     )
 
     project: Mapped[Project] = relationship(back_populates="tasks")
+    sprint: Mapped[Sprint | None] = relationship(back_populates="tasks")
     creator: Mapped["User"] = relationship(foreign_keys=[created_by_id])
     assignee: Mapped["User | None"] = relationship(foreign_keys=[assignee_id])
     required_tags: Mapped[list["Tag"]] = relationship(secondary=task_required_tags)
@@ -88,6 +98,16 @@ class Task(Base):
     attachments: Mapped[list["TaskAttachment"]] = relationship(
         back_populates="task", cascade="all, delete-orphan"
     )
+
+
+class SprintSnapshot(Base):
+    __tablename__ = "sprint_snapshots"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    sprint_id: Mapped[int] = mapped_column(ForeignKey("sprints.id", ondelete="CASCADE"), index=True)
+    recorded_on: Mapped[date] = mapped_column(Date, default=date.today, index=True)
+    remaining_points: Mapped[int] = mapped_column(Integer, default=0)
+    total_points: Mapped[int] = mapped_column(Integer, default=0)
+    sprint: Mapped[Sprint] = relationship(back_populates="snapshots")
 
 
 class TaskAttachment(Base):

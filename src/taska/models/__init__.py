@@ -7,6 +7,7 @@ from taska.models.configuration import (
     TicketType,
     WorkflowStatus,
     WorkflowTransition,
+    WipLimit,
 )
 from taska.models.invitation import Invitation
 from taska.models.notification import Notification
@@ -14,6 +15,7 @@ from taska.models.passkey import PasskeyCredential
 from taska.models.project import (
     Project,
     Sprint,
+    SprintSnapshot,
     Task,
     TaskApplication,
     TaskAttachment,
@@ -36,8 +38,10 @@ __all__ = [
     "TicketType",
     "WorkflowStatus",
     "WorkflowTransition",
+    "WipLimit",
     "Project",
     "Sprint",
+    "SprintSnapshot",
     "SiteSettings",
     "Tag",
     "TagSuggestion",

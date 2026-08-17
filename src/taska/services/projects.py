@@ -11,10 +11,11 @@ from taska.constants import (
     TASK_STATUS_IN_PROGRESS,
     TASK_STATUS_UNASSIGNED,
 )
-from taska.models.configuration import WorkflowStatus
+from taska.models.configuration import WipLimit, WorkflowStatus
 from taska.models.project import (
     Project,
     Sprint,
+    SprintSnapshot,
     Task,
     TaskApplication,
     TaskProgress,
@@ -61,6 +62,39 @@ def create_sprint(
     db.commit()
     db.refresh(sprint)
     return sprint
+
+
+def record_sprint_snapshot(db: Session, sprint_id: int) -> None:
+    sprint = db.get(Sprint, sprint_id)
+    if sprint is None:
+        return
+    done = {"done", "closed", "completed"}
+    total = sum(task.story_points or 0 for task in sprint.tasks)
+    remaining = sum(task.story_points or 0 for task in sprint.tasks if task.status not in done)
+    snapshot = db.scalar(select(SprintSnapshot).where(
+        SprintSnapshot.sprint_id == sprint_id, SprintSnapshot.recorded_on == date.today()
+    ))
+    if snapshot is None:
+        snapshot = SprintSnapshot(sprint_id=sprint_id, recorded_on=date.today())
+        db.add(snapshot)
+    snapshot.total_points = total
+    snapshot.remaining_points = remaining
+
+
+def assign_task_to_sprint(db: Session, user: User, task: Task, sprint: Sprint | None) -> Task:
+    if not is_pm(user):
+        raise ValueError("Планировать спринт могут только PM")
+    if sprint is not None and sprint.project_id != task.project_id:
+        raise ValueError("Спринт относится к другому проекту")
+    previous = task.sprint_id
+    task.sprint_id = sprint.id if sprint else None
+    if previous:
+        record_sprint_snapshot(db, previous)
+    if sprint:
+        record_sprint_snapshot(db, sprint.id)
+    db.commit()
+    db.refresh(task)
+    return task
 
 
 def get_project_statuses(db: Session, project_id: int) -> dict[str, str]:
@@ -293,10 +327,22 @@ def update_task_status(db: Session, pm: User, task: Task, new_status: str) -> Ta
     if new_status not in get_project_statuses(db, task.project_id):
         raise ValueError("Неизвестный статус")
 
+    limit = db.scalar(select(WipLimit).where(
+        WipLimit.project_id == task.project_id, WipLimit.status == new_status
+    ))
+    if limit and task.status != new_status:
+        count = db.scalar(select(func.count()).select_from(Task).where(
+            Task.project_id == task.project_id, Task.status == new_status
+        )) or 0
+        if count >= limit.limit:
+            raise ValueError(f"WIP-лимит колонки достигнут ({limit.limit})")
+
     task.status = new_status
     if new_status == TASK_STATUS_UNASSIGNED:
         task.assignee_id = None
     task.updated_at = utc_now()
+    if task.sprint_id:
+        record_sprint_snapshot(db, task.sprint_id)
     db.commit()
     db.refresh(task)
     return task

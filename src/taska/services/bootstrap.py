@@ -25,7 +25,12 @@ def _migrate_project_columns() -> None:
             "ticket_type_id": "INTEGER",
             "parent_id": "INTEGER",
             "due_date": "DATETIME",
+            "sprint_id": "INTEGER REFERENCES sprints(id) ON DELETE SET NULL",
+            "story_points": "INTEGER NOT NULL DEFAULT 0",
+            "priority": "VARCHAR(16) NOT NULL DEFAULT 'medium'",
         },
+        "sprints": {"completed_at": "DATETIME", "retrospective": "TEXT NOT NULL DEFAULT ''"},
+        "workflow_statuses": {"wip_limit": "INTEGER"},
     }
     with engine.begin() as connection:
         tables = set(inspector.get_table_names())

@@ -85,7 +85,7 @@
     {% block content %}{% endblock %}
   </main>
   <script src="/static/js/theme.js" defer></script>
-  <script>window.addEventListener('load',()=>document.body.classList.add('page-ready'));</script>
+  <script>document.addEventListener('DOMContentLoaded',()=>document.body.classList.add('page-ready'));</script>
   {% block scripts %}{% endblock %}
 </body>
 </html>
