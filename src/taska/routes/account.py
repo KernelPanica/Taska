@@ -1,8 +1,10 @@
 from pathlib import Path
+import json
+import re
 from urllib.parse import quote, unquote
 
 from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
-from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
@@ -90,6 +92,36 @@ def account_page(
         max_age=600,
     )
     return response
+
+
+@router.post("/account/interface", response_class=JSONResponse)
+def update_interface_preferences(
+    preferences: str = Form("{}"),
+    user: User | None = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    current = _require_login(user)
+    if isinstance(current, RedirectResponse):
+        return JSONResponse({"error": "Требуется вход"}, status_code=401)
+    try:
+        data = json.loads(preferences)
+    except json.JSONDecodeError:
+        return JSONResponse({"error": "Некорректные настройки"}, status_code=400)
+    if not isinstance(data, dict):
+        return JSONResponse({"error": "Некорректные настройки"}, status_code=400)
+    allowed = {"theme", "accent", "density", "motion", "font_scale"}
+    clean = {key: str(value)[:32] for key, value in data.items() if key in allowed}
+    if clean.get("theme") not in {None, "dark", "light", "xp", "custom"}:
+        return JSONResponse({"error": "Неизвестная тема"}, status_code=400)
+    if clean.get("density") not in {None, "comfortable", "compact"}:
+        return JSONResponse({"error": "Неизвестная плотность"}, status_code=400)
+    if clean.get("accent") and not re.fullmatch(r"#[0-9a-fA-F]{6}", clean["accent"]):
+        return JSONResponse({"error": "Некорректный цвет акцента"}, status_code=400)
+    if clean.get("font_scale") and clean["font_scale"] not in {"0.9", "0.95", "1", "1.05", "1.1", "1.15"}:
+        return JSONResponse({"error": "Некорректный размер текста"}, status_code=400)
+    current.ui_preferences = json.dumps(clean, ensure_ascii=True)
+    db.commit()
+    return {"ok": True, "preferences": clean}
 
 
 @router.post("/account")

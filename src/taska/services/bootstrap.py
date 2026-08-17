@@ -80,6 +80,7 @@ def _migrate_user_profile_columns() -> None:
         "avatar_data": "BLOB",
         "avatar_mime": "VARCHAR(64)",
         "has_password": "BOOLEAN NOT NULL DEFAULT 1",
+        "ui_preferences": "TEXT NOT NULL DEFAULT '{}'",
     }
 
     with engine.begin() as connection:

@@ -33,6 +33,7 @@ class User(Base):
     discord_avatar_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     avatar_data: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
     avatar_mime: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    ui_preferences: Mapped[str] = mapped_column(Text, default="{}")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     tags: Mapped[list[Tag]] = relationship(secondary=user_tags, back_populates="users")

@@ -5,7 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}{{ site.app_name if site is defined else 'Taska' }}{% endblock %}</title>
   <script>
-    document.documentElement.dataset.theme = localStorage.getItem('taska-theme') || 'dark';
+    window.TASKA_SERVER_PREFS = {% if user %}JSON.parse({{ (user.ui_preferences or '{}') | tojson }}){% else %}{}{% endif %};
+    const prefs = {...window.TASKA_SERVER_PREFS, ...JSON.parse(localStorage.getItem('taska-ui') || '{}')};
+    document.documentElement.dataset.theme = prefs.theme || localStorage.getItem('taska-theme') || 'dark';
+    document.documentElement.dataset.density = prefs.density || 'comfortable';
+    document.documentElement.dataset.motion = prefs.motion || 'full';
+    if (prefs.accent) document.documentElement.style.setProperty('--primary', prefs.accent);
+    if (prefs.font_scale) document.documentElement.style.setProperty('--font-scale', prefs.font_scale);
   </script>
   <link rel="stylesheet" href="/static/css/style.css">
 </head>
@@ -40,6 +46,7 @@
                   <option value="light">Светлая</option>
                   <option value="dark">Тёмная</option>
                   <option value="xp">Windows XP</option>
+                  <option value="custom">Своя тема</option>
                 </select>
               </label>
             </div>
@@ -49,6 +56,8 @@
       </div>
       <nav class="header-actions" aria-label="Пользовательские действия">
         {% if user %}
+
+          <button type="button" class="icon-button quick-open-button" aria-label="Быстрый переход" title="Быстрый переход" data-command-open>⌕</button>
 
           <a href="/notifications" class="icon-button notification-button" aria-label="Уведомления">
             <span class="bell-icon" aria-hidden="true"></span>
@@ -85,6 +94,8 @@
   <main class="container main {% block main_class %}{% endblock %}">
     {% block content %}{% endblock %}
   </main>
+  {% if user %}<div class="command-overlay" data-command-overlay hidden><section class="command-palette" role="dialog" aria-modal="true" aria-label="Быстрый переход"><div class="command-input-wrap"><span>⌕</span><input type="search" placeholder="Перейти к разделу…" data-command-input autocomplete="off"></div><div class="command-results" data-command-results><a href="/">Дашборд <small>Главная</small></a><a href="/projects">Проекты <small>Задачи и доски</small></a><a href="/profiles">Команда <small>Профили участников</small></a><a href="/notifications">Уведомления <small>События</small></a><a href="/account">Мой профиль <small>Настройки и тема</small></a>{% if user.is_admin %}<a href="/admin">Администрирование <small>Управление</small></a><a href="/admin/settings">Настройки системы <small>Окружение</small></a>{% endif %}</div></section></div>{% endif %}
+  <div class="toast-region" aria-live="polite" data-toast-region></div>
   <script src="/static/js/theme.js" defer></script>
   <script>document.addEventListener('DOMContentLoaded',()=>document.body.classList.add('page-ready'));</script>
   {% block scripts %}{% endblock %}

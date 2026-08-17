@@ -48,6 +48,18 @@
     </div>
   </div>
 
+  <section class="card interface-settings" data-interface-settings>
+    <div class="interface-settings-head"><div><h2>Интерфейс</h2><p class="muted">Персональная тема синхронизируется с вашим аккаунтом.</p></div><button class="btn btn-primary" type="button" data-interface-save>Сохранить оформление</button></div>
+    <div class="interface-controls">
+      <label>Тема<select data-ui-theme><option value="dark">Тёмная</option><option value="light">Светлая</option><option value="xp">Windows XP</option><option value="custom">Своя</option></select></label>
+      <label>Акцент<input type="color" value="#6da8ff" data-ui-accent></label>
+      <label>Плотность<select data-ui-density><option value="comfortable">Обычная</option><option value="compact">Компактная</option></select></label>
+      <label>Анимации<select data-ui-motion><option value="full">Включены</option><option value="reduced">Минимальные</option></select></label>
+      <label>Размер текста<input type="range" min="0.9" max="1.15" step="0.05" value="1" data-ui-font-scale></label>
+    </div>
+    <div class="theme-presets"><button type="button" data-theme-preset="ocean" style="--swatch:#3276d1">Ocean</button><button type="button" data-theme-preset="graphite" style="--swatch:#6f7b8a">Graphite</button><button type="button" data-theme-preset="rose" style="--swatch:#d05278">Rose</button><button type="button" data-theme-preset="mint" style="--swatch:#258b78">Mint</button><button type="button" class="btn btn-ghost" data-interface-reset>Сбросить</button></div>
+  </section>
+
   <div class="split-layout">
 
     <form method="post" action="/account" class="card form">
@@ -144,7 +156,7 @@
 
       <div class="oauth-block">
         <h3>Passkeys</h3>
-        <p class="muted">Вход через Windows Hello, отпечаток пальца Android или аппаратный ключ.</p>
+        <p class="muted">Вход с конкретного устройства через WebAuthn: Windows Hello, Touch ID, Android, KDE Wallet, GNOME Keyring, встроенный TPM или аппаратный ключ FIDO2.</p>
         <button type="button" class="btn btn-oauth" data-passkey-register hidden>
           Добавить passkey
         </button>
@@ -167,4 +179,4 @@
 </section>
 {% endblock %}
 
-{% block scripts %}<script src="/static/js/passkeys.js" defer></script>{% endblock %}
+{% block scripts %}<script src="/static/js/passkeys.js" defer></script><script src="/static/js/interface.js" defer></script>{% endblock %}
