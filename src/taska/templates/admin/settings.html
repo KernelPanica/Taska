@@ -15,12 +15,13 @@
           {% if field_type == "boolean" %}
             <label class="checkbox"><input type="checkbox" name="{{ key }}" {% if env_values.get(key, '').lower() in ['1','true','yes','on'] %}checked{% endif %}>{{ label }}</label>
           {% else %}
-            <label>{{ label }}<input type="{{ field_type }}" name="{{ key }}" value="{{ env_values.get(key, '') if field_type != 'password' else '' }}" {% if field_type == 'password' and env_values.get(key) %}placeholder="Значение настроено; оставьте пустым, чтобы сохранить"{% endif %} autocomplete="off"></label>
+            <label>{{ label }}<input type="{{ field_type }}" name="{{ key }}" value="{{ env_values.get(key, '') if field_type != 'password' else '' }}" {% if field_type == 'password' and env_values.get(key) %}placeholder="Значение настроено; оставьте пустым, чтобы сохранить"{% endif %} autocomplete="off">{% if key == 'TASKA_BASE_URL' %}<small>Формат: https://taska.example.com, без завершающего пути</small>{% elif key == 'TASKA_WEBAUTHN_ORIGIN' %}<small>Формат: https://taska.example.com</small>{% elif key == 'TASKA_WEBAUTHN_RP_ID' %}<small>Только домен: taska.example.com</small>{% endif %}</label>
           {% endif %}
         {% endfor %}
-        <div class="env-warning">Изменения вступят в силу после команды <code>docker compose up -d --force-recreate</code>.</div>
+        <div class="env-warning">После сохранения примените настройки кнопкой перезапуска.</div>
         <button class="btn btn-primary" type="submit">Сохранить окружение</button>
       </form>
+      <form method="post" action="/admin/settings/restart" class="restart-action"><button class="btn btn-ghost" type="submit">Применить и перезапустить Taska</button></form>
     </section>
 
     <section class="card admin-settings-panel">

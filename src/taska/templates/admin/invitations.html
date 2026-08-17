@@ -1,53 +1,26 @@
 {% extends "base.html" %}
-
 {% block title %}Приглашения — Taska{% endblock %}
-
 {% block content %}
-<section>
-  <h1>Генератор ссылок-приглашений</h1>
-  <p class="muted">Ссылка действует 7 дней и может быть использована один раз.</p>
+<section class="invite-admin-page">
+  <header class="section-header"><div><p class="muted"><a href="/admin">Администрирование</a> / Приглашения</p><h1>Приглашения</h1><p class="muted">Ссылки создаются от публичного адреса {{ site.base_url }}.</p></div></header>
+  {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}{% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+  {% if created %}<div class="alert alert-success">Приглашение создано. Ссылка готова к копированию.</div>{% endif %}
 
-  <form method="post" action="/admin/invitations" class="form-inline">
+  <form method="post" action="/admin/invitations" class="card invite-create-form">
+    <label>Срок действия<select name="expires_days"><option value="1">1 день</option><option value="3">3 дня</option><option value="7" selected>7 дней</option><option value="14">14 дней</option><option value="30">30 дней</option><option value="0">Без ограничения</option></select></label>
+    <label class="checkbox"><input type="checkbox" name="grants_admin"> Создать администратора</label>
     <button type="submit" class="btn btn-primary">Создать приглашение</button>
   </form>
 
-  {% if created %}
-    <div class="alert alert-success">
-      Новое приглашение создано. Скопируйте ссылку из таблицы ниже.
-    </div>
-  {% endif %}
-
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Ссылка</th>
-          <th>Создано</th>
-          <th>Истекает</th>
-          <th>Статус</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for item in invitations %}
-          <tr>
-            <td><code class="link-code">{{ item.url }}</code></td>
-            <td>{{ item.invitation.created_at.strftime('%d.%m.%Y %H:%M') if item.invitation.created_at else '—' }}</td>
-            <td>{{ item.invitation.expires_at.strftime('%d.%m.%Y %H:%M') if item.invitation.expires_at else '—' }}</td>
-            <td>
-              {% if item.invitation.used_at %}
-                <span class="badge badge-used">Использовано</span>
-              {% else %}
-                <span class="badge badge-active">Активно</span>
-              {% endif %}
-            </td>
-          </tr>
-        {% else %}
-          <tr>
-            <td colspan="4" class="muted">Приглашений пока нет</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <div class="invite-list">
+    {% for item in invitations %}
+      <article class="invite-row">
+        <div class="invite-link"><code>{{ item.url }}</code><button type="button" class="icon-button" data-copy-value="{{ item.url }}" title="Копировать ссылку" aria-label="Копировать ссылку">▣</button></div>
+        <div class="invite-meta"><span>Создано {{ item.invitation.created_at.strftime('%d.%m.%Y %H:%M') if item.invitation.created_at else '—' }}</span><span>{{ 'Без срока' if not item.invitation.expires_at else 'До ' ~ item.invitation.expires_at.strftime('%d.%m.%Y %H:%M') }}</span>{% if item.invitation.grants_admin %}<strong>Администратор</strong>{% endif %}</div>
+        <div class="invite-actions"><span class="badge invite-status-{{ item.status }}">{{ {'active':'Активно','used':'Использовано','revoked':'Отключено','expired':'Истекло'}[item.status] }}</span>{% if item.status == 'active' %}<form method="post" action="/admin/invitations/{{ item.invitation.id }}/revoke"><button class="btn btn-ghost" type="submit">Деактивировать</button></form>{% endif %}</div>
+      </article>
+    {% else %}<div class="card empty-state">Приглашений пока нет</div>{% endfor %}
   </div>
 </section>
 {% endblock %}
+{% block scripts %}<script src="/static/js/admin.js" defer></script>{% endblock %}

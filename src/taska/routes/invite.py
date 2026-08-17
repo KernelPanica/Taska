@@ -64,7 +64,7 @@ def invite_register(
     response = RedirectResponse("/", status_code=303)
     response.set_cookie(
         COOKIE_NAME,
-        create_access_token(user.username, is_admin=False),
+        create_access_token(user.username, is_admin=user.is_admin),
         httponly=True,
         samesite="lax",
         max_age=60 * 60 * 24,

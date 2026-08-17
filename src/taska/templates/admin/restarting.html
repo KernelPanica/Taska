@@ -1,0 +1,4 @@
+{% extends "base.html" %}
+{% block title %}Перезапуск — Taska{% endblock %}
+{% block content %}<section class="card card-narrow restart-panel"><h1>Taska перезапускается</h1><p class="muted">Новые настройки применяются. Страница обновится автоматически.</p><div class="restart-progress"><span></span></div></section>{% endblock %}
+{% block scripts %}<script>setTimeout(()=>location.href='/admin/settings',4000);</script>{% endblock %}

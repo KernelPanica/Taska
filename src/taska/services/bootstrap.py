@@ -15,6 +15,22 @@ def init_db() -> None:
     Base.metadata.create_all(bind=engine)
     _migrate_user_profile_columns()
     _migrate_project_columns()
+    _migrate_invitation_columns()
+
+
+def _migrate_invitation_columns() -> None:
+    inspector = inspect(engine)
+    if "invitations" not in inspector.get_table_names():
+        return
+    existing = {column["name"] for column in inspector.get_columns("invitations")}
+    alterations = {
+        "revoked_at": "DATETIME",
+        "grants_admin": "BOOLEAN NOT NULL DEFAULT 0",
+    }
+    with engine.begin() as connection:
+        for name, column_type in alterations.items():
+            if name not in existing:
+                connection.execute(text(f"ALTER TABLE invitations ADD COLUMN {name} {column_type}"))
 
 
 def _migrate_project_columns() -> None:
@@ -79,6 +95,7 @@ def get_admin_stats(db: Session) -> dict[str, int]:
         select(func.count())
         .select_from(Invitation)
         .where(Invitation.used_at.is_(None))
+        .where(Invitation.revoked_at.is_(None))
         .where((Invitation.expires_at.is_(None)) | (Invitation.expires_at > utc_now()))
     ) or 0
     task_status_counts = {
@@ -95,15 +112,15 @@ def get_admin_stats(db: Session) -> dict[str, int]:
 
 def get_site_context(db: Session) -> dict[str, str]:
     site = db.scalar(select(SiteSettings).limit(1))
+    settings = get_settings()
     if site is None:
-        settings = get_settings()
         return {
             "app_name": settings.app_name,
             "organization_name": "",
             "base_url": settings.base_url.rstrip("/"),
         }
     return {
-        "app_name": site.app_name,
+        "app_name": settings.app_name or site.app_name,
         "organization_name": site.organization_name,
-        "base_url": site.base_url.rstrip("/"),
+        "base_url": settings.base_url.rstrip("/"),
     }

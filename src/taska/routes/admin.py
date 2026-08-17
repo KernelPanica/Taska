@@ -1,6 +1,8 @@
 from pathlib import Path
+import os
+import threading
 
-from urllib.parse import quote, unquote
+from urllib.parse import quote, unquote, urlparse
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -11,7 +13,7 @@ from taska.auth.dependencies import get_current_user
 from taska.database import get_db
 from taska.models.user import User
 from taska.services.bootstrap import get_admin_stats, get_site_context
-from taska.services.invitation import create_invitation, list_invitations
+from taska.services.invitation import create_invitation, list_invitations, revoke_invitation
 from taska.services.admin_settings import (
     ENV_FIELDS,
     env_file_path,
@@ -19,6 +21,7 @@ from taska.services.admin_settings import (
     set_administrator,
     update_env_values,
 )
+from taska.utils.datetime import to_naive_utc, utc_now
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 templates = Jinja2Templates(directory=str(Path(__file__).resolve().parent.parent / "templates"))
@@ -55,6 +58,8 @@ def invitations_page(
     user: User | None = Depends(get_current_user),
     db: Session = Depends(get_db),
     created: str | None = None,
+    success: str | None = None,
+    error: str | None = None,
 ):
     admin = _require_admin(user)
     if isinstance(admin, RedirectResponse):
@@ -66,6 +71,7 @@ def invitations_page(
         {
             "invitation": inv,
             "url": f"{site['base_url']}/invite/{inv.token}",
+            "status": "used" if inv.used_at else "revoked" if inv.revoked_at else "expired" if inv.expires_at and to_naive_utc(inv.expires_at) < utc_now() else "active",
         }
         for inv in invitations
     ]
@@ -77,6 +83,8 @@ def invitations_page(
             "user": admin,
             "invitations": invite_links,
             "created": created,
+            "success": unquote(success) if success else None,
+            "error": unquote(error) if error else None,
             "site": site,
         },
     )
@@ -84,6 +92,8 @@ def invitations_page(
 
 @router.post("/invitations")
 def create_invitation_link(
+    expires_days: int = Form(7),
+    grants_admin: str | None = Form(None),
     user: User | None = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> RedirectResponse:
@@ -91,8 +101,30 @@ def create_invitation_link(
     if isinstance(admin, RedirectResponse):
         return admin
 
-    invitation = create_invitation(db, admin)
+    try:
+        invitation = create_invitation(
+            db, admin, expires_days=expires_days, grants_admin=grants_admin == "on"
+        )
+    except ValueError as exc:
+        return RedirectResponse(f"/admin/invitations?error={quote(str(exc))}", status_code=303)
     return RedirectResponse(f"/admin/invitations?created={invitation.token}", status_code=303)
+
+
+@router.post("/invitations/{invitation_id}/revoke")
+def revoke_invitation_link(
+    invitation_id: int,
+    user: User | None = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    admin = _require_admin(user)
+    if isinstance(admin, RedirectResponse):
+        return admin
+    from taska.models.invitation import Invitation
+    invitation = db.get(Invitation, invitation_id)
+    if invitation is None:
+        return RedirectResponse("/admin/invitations?error=Приглашение+не+найдено", status_code=303)
+    revoke_invitation(db, invitation)
+    return RedirectResponse("/admin/invitations?success=Приглашение+деактивировано", status_code=303)
 
 
 @router.get("/settings", response_class=HTMLResponse)
@@ -133,13 +165,36 @@ async def update_environment(
         else:
             value = str(form.get(key, "")).strip()
             updates[key] = existing.get(key, "") if field_type == "password" and not value else value
+    parsed_url = urlparse(updates.get("TASKA_BASE_URL", ""))
+    if parsed_url.scheme not in {"http", "https"} or not parsed_url.netloc or parsed_url.path not in {"", "/"}:
+        return RedirectResponse(
+            f"/admin/settings?error={quote('Публичный URL должен иметь формат https://taska.example.com без пути')}",
+            status_code=303,
+        )
     try:
         update_env_values(updates)
     except (OSError, ValueError) as exc:
         return RedirectResponse(f"/admin/settings?error={quote(str(exc))}", status_code=303)
     return RedirectResponse(
-        f"/admin/settings?success={quote('Настройки сохранены. Пересоздайте контейнер для применения')}",
+        f"/admin/settings?success={quote('Настройки сохранены. Нажмите «Применить и перезапустить»')}",
         status_code=303,
+    )
+
+
+@router.post("/settings/restart", response_class=HTMLResponse)
+def restart_application(
+    request: Request,
+    user: User | None = Depends(get_current_user),
+):
+    current = _require_admin(user)
+    if isinstance(current, RedirectResponse):
+        return current
+    threading.Timer(1.0, lambda: os._exit(0)).start()
+    return templates.TemplateResponse(
+        request,
+        "admin/restarting.html",
+        {"user": current, "site": {"app_name": "Taska"}},
+        status_code=202,
     )
 
 

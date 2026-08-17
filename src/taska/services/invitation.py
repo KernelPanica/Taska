@@ -4,7 +4,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from taska.auth.security import (
-    INVITATION_EXPIRE_DAYS,
     generate_invitation_token,
     hash_password,
     unusable_password_hash,
@@ -14,11 +13,14 @@ from taska.models.user import User
 from taska.utils.datetime import to_naive_utc, utc_now
 
 
-def create_invitation(db: Session, admin: User) -> Invitation:
+def create_invitation(db: Session, admin: User, *, expires_days: int = 7, grants_admin: bool = False) -> Invitation:
+    if not 0 <= expires_days <= 365:
+        raise ValueError("Срок приглашения должен быть от 1 до 365 дней или 0 без ограничения")
     invitation = Invitation(
         token=generate_invitation_token(),
         created_by_id=admin.id,
-        expires_at=utc_now() + timedelta(days=INVITATION_EXPIRE_DAYS),
+        expires_at=utc_now() + timedelta(days=expires_days) if expires_days else None,
+        grants_admin=grants_admin,
     )
     db.add(invitation)
     db.commit()
@@ -28,7 +30,7 @@ def create_invitation(db: Session, admin: User) -> Invitation:
 
 def get_valid_invitation(db: Session, token: str) -> Invitation | None:
     invitation = db.scalar(select(Invitation).where(Invitation.token == token))
-    if invitation is None or invitation.used_at is not None:
+    if invitation is None or invitation.used_at is not None or invitation.revoked_at is not None:
         return None
     if invitation.expires_at and to_naive_utc(invitation.expires_at) < utc_now():
         return None
@@ -37,6 +39,12 @@ def get_valid_invitation(db: Session, token: str) -> Invitation | None:
 
 def list_invitations(db: Session) -> list[Invitation]:
     return list(db.scalars(select(Invitation).order_by(Invitation.created_at.desc())).all())
+
+
+def revoke_invitation(db: Session, invitation: Invitation) -> None:
+    if invitation.used_at is None and invitation.revoked_at is None:
+        invitation.revoked_at = utc_now()
+        db.commit()
 
 
 def _consume_invitation(db: Session, invitation: Invitation, user: User) -> User:
@@ -56,7 +64,7 @@ def register_via_invitation(
         username=username,
         password_hash=hash_password(password),
         has_password=True,
-        is_admin=False,
+        is_admin=invitation.grants_admin,
         display_name=username,
     )
     return _consume_invitation(db, invitation, user)
@@ -75,7 +83,7 @@ def register_discord_via_invitation(
         username=username,
         password_hash=unusable_password_hash(),
         has_password=False,
-        is_admin=False,
+        is_admin=invitation.grants_admin,
         display_name=discord_username or username,
         discord_id=discord_id,
         discord_username=discord_username,

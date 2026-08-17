@@ -1,0 +1,13 @@
+[Unit]
+Description=Update and start Taska
+Wants=network-online.target docker.service
+After=network-online.target docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/Taska
+ExecStart=/opt/Taska/update-and-start.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
