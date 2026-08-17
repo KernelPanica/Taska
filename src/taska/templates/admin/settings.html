@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Настройки — Taska{% endblock %}
+{% block content %}
+<section class="admin-settings-page">
+  <header class="section-header"><div><p class="muted"><a href="/admin">Администрирование</a> / Настройки</p><h1>Настройки системы</h1></div></header>
+  {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
+  {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+
+  <div class="admin-settings-grid">
+    <section class="card admin-settings-panel">
+      <header><h2>Окружение</h2><p>Файл: <code>{{ env_path }}</code></p></header>
+      <form method="post" action="/admin/settings/environment" class="form env-settings-form">
+        {% for key, meta in env_fields.items() %}
+          {% set label, field_type = meta %}
+          {% if field_type == "boolean" %}
+            <label class="checkbox"><input type="checkbox" name="{{ key }}" {% if env_values.get(key, '').lower() in ['1','true','yes','on'] %}checked{% endif %}>{{ label }}</label>
+          {% else %}
+            <label>{{ label }}<input type="{{ field_type }}" name="{{ key }}" value="{{ env_values.get(key, '') if field_type != 'password' else '' }}" {% if field_type == 'password' and env_values.get(key) %}placeholder="Значение настроено; оставьте пустым, чтобы сохранить"{% endif %} autocomplete="off"></label>
+          {% endif %}
+        {% endfor %}
+        <div class="env-warning">Изменения вступят в силу после команды <code>docker compose up -d --force-recreate</code>.</div>
+        <button class="btn btn-primary" type="submit">Сохранить окружение</button>
+      </form>
+    </section>
+
+    <section class="card admin-settings-panel">
+      <header><h2>Администраторы</h2><p>Хотя бы один пользователь должен оставаться администратором.</p></header>
+      <div class="admin-user-list">
+        {% for item in users %}
+          <div class="admin-user-row"><div><strong>{{ item.display_name or item.username }}</strong><small>@{{ item.username }}</small></div><form method="post" action="/admin/users/{{ item.id }}/administrator"><input type="hidden" name="enabled" value="{{ '0' if item.is_admin else '1' }}"><span class="admin-state {{ 'is-admin' if item.is_admin else '' }}">{{ 'Администратор' if item.is_admin else 'Пользователь' }}</span><button class="btn btn-ghost" type="submit">{{ 'Снять права' if item.is_admin else 'Сделать админом' }}</button></form></div>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+</section>
+{% endblock %}

@@ -3,14 +3,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    env_file:
-      - .env.quick-start
     environment:
       TASKA_DATABASE_URL: sqlite:////data/taska.db
+      TASKA_ENV_FILE: /data/taska.env
     ports:
       - "${TASKA_PORT:-8000}:8000"
     volumes:
       - taska-data:/data
+      - ./.env.quick-start:/bootstrap/.env.quick-start:ro
     restart: unless-stopped
     healthcheck:
       test:

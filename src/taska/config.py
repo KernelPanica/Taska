@@ -1,11 +1,12 @@
 from functools import lru_cache
+import os
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=os.getenv("TASKA_ENV_FILE", ".env"),
         env_file_encoding="utf-8",
         env_prefix="TASKA_",
         extra="ignore",

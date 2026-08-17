@@ -1319,6 +1319,11 @@ img.avatar-large {
   .social-profile-title { display: block; }
 }
 
+/* Administration settings */
+.admin-settings-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(360px,.85fr);gap:.8rem}.admin-settings-panel{padding:1rem}.admin-settings-panel>header{margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid var(--border)}.admin-settings-panel h2,.admin-settings-panel p{margin:.15rem 0}.admin-settings-panel header p{color:var(--muted);font-size:.78rem}.env-settings-form{grid-template-columns:repeat(2,minmax(0,1fr))}.env-settings-form .checkbox,.env-settings-form .env-warning,.env-settings-form .btn{grid-column:1/-1}.env-warning{padding:.65rem .75rem;border:1px solid var(--border);border-radius:6px;background:var(--surface-2);color:var(--muted);font-size:.78rem}.admin-user-list{display:grid}.admin-user-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.7rem 0;border-bottom:1px solid var(--border)}.admin-user-row:last-child{border-bottom:0}.admin-user-row>div small{display:block;margin-top:.15rem;color:var(--muted)}.admin-user-row form{display:flex;align-items:center;gap:.55rem}.admin-state{padding:.22rem .4rem;border-radius:4px;background:var(--surface-2);color:var(--muted);font-size:.68rem;font-weight:700}.admin-state.is-admin{background:color-mix(in srgb,var(--primary) 14%,transparent);color:var(--primary)}
+@media(max-width:950px){.admin-settings-grid{grid-template-columns:1fr}}
+@media(max-width:620px){.env-settings-form{grid-template-columns:1fr}.admin-user-row{align-items:flex-start;flex-direction:column}.admin-user-row form{width:100%;justify-content:space-between}.admin-user-row .btn{width:auto}}
+
 /* 2026 workspace redesign */
 body {
   background:

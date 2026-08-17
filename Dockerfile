@@ -12,9 +12,10 @@ COPY requirements.txt ./
 RUN python -m pip install --no-cache-dir -r requirements.txt
 
 COPY src ./src
+COPY docker-entrypoint.sh ./docker-entrypoint.sh
 RUN mkdir -p /data && chown -R taska:taska /app /data
 
 USER taska
 EXPOSE 8000
 
-CMD ["python", "-m", "taska.main"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
