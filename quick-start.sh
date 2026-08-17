@@ -42,7 +42,7 @@ EOF
   echo "Создан $ENV_FILE с уникальными секретами."
 fi
 
-docker compose --env-file "$ENV_FILE" up --build -d
+TASKA_ENV_FILE_SOURCE="$ENV_FILE" docker compose --env-file "$ENV_FILE" up --build -d
 
 SETUP_KEY=$(sed -n 's/^TASKA_SETUP_KEY=//p' "$ENV_FILE")
 
