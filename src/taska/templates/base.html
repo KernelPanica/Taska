@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}{{ site.app_name if site is defined else 'Taska' }}{% endblock %}</title>
+  <link rel="icon" href="/static/favicon.ico" sizes="any">
   <script>
     window.TASKA_SERVER_PREFS = {% if user %}JSON.parse({{ (user.ui_preferences or '{}') | tojson }}){% else %}{}{% endif %};
     const prefs = {...window.TASKA_SERVER_PREFS, ...JSON.parse(localStorage.getItem('taska-ui') || '{}')};
