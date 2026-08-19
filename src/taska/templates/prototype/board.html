@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Прототип доски — {{ site.app_name }}{% endblock %}
+{% block main_class %}proto-main{% endblock %}
+{% block styles %}<link rel="stylesheet" href="/static/css/prototype.css">{% endblock %}
+{% block content %}
+<section class="proto-app" data-proto-app>
+  <header class="proto-topbar">
+    <div class="proto-title"><a href="/projects">←</a><select aria-label="Проект" data-project-select>{% for item in projects %}<option value="{{ item.id }}" {% if project and project.id == item.id %}selected{% endif %}>{{ item.name }}</option>{% endfor %}</select></div>
+    <div class="proto-sync"><i></i><span data-sync-label>Синхронизировано</span></div>
+    <div class="proto-top-actions"><button type="button" title="Экспорт" data-export>⇩</button><label title="Импорт">⇧<input type="file" accept="application/json" data-import hidden></label><button type="button" title="Очистить доску" data-reset>↺</button></div>
+  </header>
+
+  <aside class="proto-toolbar" aria-label="Инструменты">
+    <button type="button" class="active" data-tool="select" title="Выбор и перемещение">↖</button>
+    <button type="button" data-add="task" title="Добавить задачу">▣</button>
+    <button type="button" data-add="status" title="Добавить статус">▤</button>
+    <button type="button" data-add="sprint" title="Добавить спринт">◫</button>
+    <button type="button" data-add="note" title="Добавить заметку">T</button>
+    <button type="button" data-tool="connect" title="Связать объекты">⌁</button>
+    <span></span>
+    <button type="button" data-delete title="Удалить выбранное">⌫</button>
+  </aside>
+
+  <div class="proto-viewport" data-viewport tabindex="0">
+    <div class="proto-world" data-world>
+      <svg class="proto-links" data-links aria-hidden="true"></svg>
+      <div class="proto-items" data-items></div>
+    </div>
+    <div class="proto-empty-hint" data-empty-hint>Дважды нажмите на поле, чтобы создать заметку</div>
+  </div>
+
+  <div class="proto-zoom"><button type="button" data-zoom-out>−</button><button type="button" data-zoom-label>100%</button><button type="button" data-zoom-in>＋</button><button type="button" data-fit title="Показать всё">⌗</button></div>
+  <div class="proto-minimap"><div data-minimap-world></div><i data-minimap-view></i></div>
+  <div class="proto-inspector" data-inspector hidden><header><strong>Свойства</strong><button type="button" data-inspector-close>×</button></header><label>Название<input data-prop-title></label><label>Цвет<input type="color" data-prop-color></label><label data-status-field>Статус<select data-prop-status></select></label><label data-link-field hidden>Подпись<input data-prop-link-label></label></div>
+</section>
+<script type="application/json" id="prototype-board-data">{{ canvas_data | tojson }}</script>
+{% endblock %}
+{% block scripts %}<script src="/static/js/prototype-board.js" defer></script>{% endblock %}

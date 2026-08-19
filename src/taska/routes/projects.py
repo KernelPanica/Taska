@@ -236,7 +236,7 @@ def project_sprints(
     velocity = []
     for sprint in [s for s in project.sprints if s.status == "completed"][-6:]:
         velocity.append({"name": sprint.name, "points": sum(t.story_points or 0 for t in sprint.tasks if t.status in done_codes)})
-    max_velocity = max((item["points"] for item in velocity), default=1)
+    max_velocity = max(1, max((item["points"] for item in velocity), default=0))
     burndown = []
     if selected_sprint:
         days = max(1, (selected_sprint.end_date - selected_sprint.start_date).days)
