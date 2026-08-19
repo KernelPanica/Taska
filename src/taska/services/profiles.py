@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from taska.models.tag import Tag, TagSuggestion
 from taska.models.user import User
+from taska.models.role import CustomRole
 from taska.roles import POSITION_CODES
 from taska.utils.datetime import utc_now
 
@@ -23,6 +24,29 @@ def get_position_label(position_code: str | None) -> str:
     if not position_code:
         return "—"
     return POSITION_CODES.get(position_code, position_code)
+
+
+def list_roles(db: Session) -> dict[str, str]:
+    roles = dict(POSITION_CODES)
+    roles.update({role.code: role.name for role in db.scalars(select(CustomRole).order_by(CustomRole.name)).all()})
+    return roles
+
+
+def create_custom_role(db: Session, admin: User, name: str) -> CustomRole:
+    if not admin.is_admin:
+        raise ValueError("Создавать роли может только администратор")
+    label = " ".join(name.strip().split())
+    if len(label) < 2 or len(label) > 128:
+        raise ValueError("Название роли должно быть от 2 до 128 символов")
+    if label.lower() in {value.lower() for value in POSITION_CODES.values()} or db.scalar(select(CustomRole).where(func.lower(CustomRole.name) == label.lower())):
+        raise ValueError("Такая роль уже существует")
+    code = "CUSTOM-" + re.sub(r"[^A-Z0-9]+", "-", label.upper()).strip("-")[:24]
+    base, suffix = code, 2
+    while code in POSITION_CODES or db.scalar(select(CustomRole).where(CustomRole.code == code)):
+        code = f"{base}-{suffix}"[:32]; suffix += 1
+    role = CustomRole(code=code, name=label)
+    db.add(role); db.commit(); db.refresh(role)
+    return role
 
 
 def list_member_profiles(db: Session) -> list[User]:
@@ -54,7 +78,7 @@ def update_user_role(
     if not admin.is_admin:
         raise ValueError("Назначать роли может только администратор")
     position = position_code.strip().upper()
-    if position and position not in POSITION_CODES:
+    if position and position not in list_roles(db):
         raise ValueError("Неизвестная роль")
     if experience_years < 0 or experience_years > 50:
         raise ValueError("Стаж должен быть от 0 до 50 лет")

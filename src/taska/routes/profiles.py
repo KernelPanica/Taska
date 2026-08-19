@@ -23,6 +23,8 @@ from taska.services.profiles import (
     remove_tag_from_user,
     suggest_tag,
     update_user_role,
+    create_custom_role,
+    list_roles,
 )
 
 router = APIRouter(tags=["profiles"])
@@ -40,6 +42,8 @@ def profiles_list(
     request: Request,
     user: User | None = Depends(get_current_user),
     db: Session = Depends(get_db),
+    success: str | None = None,
+    error: str | None = None,
 ):
     current = _require_login(user)
     if isinstance(current, RedirectResponse):
@@ -50,7 +54,7 @@ def profiles_list(
     profiles = [
         {
             "user": member,
-            "position_label": get_position_label(member.position_code),
+            "position_label": list_roles(db).get(member.position_code, "—") if member.position_code else "—",
         }
         for member in members
     ]
@@ -58,7 +62,7 @@ def profiles_list(
     return templates.TemplateResponse(
         request,
         "profiles/list.html",
-        {"user": current, "profiles": profiles, "site": site},
+        {"user": current, "profiles": profiles, "site": site, "success": unquote(success) if success else None, "error": unquote(error) if error else None},
     )
 
 
@@ -90,12 +94,12 @@ def profile_detail(
         {
             "user": current,
             "profile": profile,
-            "position_label": get_position_label(profile.position_code),
+            "position_label": list_roles(db).get(profile.position_code, "—") if profile.position_code else "—",
             "site": site,
             "is_own_profile": is_own_profile,
             "is_admin": is_admin,
             "all_tags": list_all_tags(db) if is_admin else [],
-            "positions": POSITION_CODES if is_admin else {},
+            "positions": list_roles(db) if is_admin else {},
             "pending_suggestions": pending,
             "success": unquote(success) if success else None,
             "error": unquote(error) if error else None,
@@ -132,6 +136,18 @@ def admin_update_role(
     return RedirectResponse(
         f"/profiles/{username}?success={quote('Роль обновлена')}", status_code=303
     )
+
+
+@router.post("/admin/roles")
+def admin_create_role(name: str = Form(...), user: User | None = Depends(get_current_user), db: Session = Depends(get_db)) -> RedirectResponse:
+    current = _require_login(user)
+    if isinstance(current, RedirectResponse):
+        return current
+    try:
+        create_custom_role(db, current, name)
+    except ValueError as exc:
+        return RedirectResponse(f"/profiles?error={quote(str(exc))}", status_code=303)
+    return RedirectResponse("/profiles?success=Роль создана", status_code=303)
 
 
 @router.post("/profiles/{username}/suggest-tag")

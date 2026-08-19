@@ -4,6 +4,8 @@
 
 {% block content %}
 <section>
+  {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
+  {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
   <h1>Штат организации</h1>
   <p class="muted">Должности, стаж и навыки команды.</p>
 
@@ -30,5 +32,14 @@
       <p class="muted">Участников пока нет.</p>
     {% endfor %}
   </div>
+  {% if user.is_admin %}
+  <div class="card inner-card role-create-panel">
+    <h2>Кастомные роли</h2>
+    <form method="post" action="/admin/roles" class="form form-inline-row">
+      <input name="name" maxlength="128" placeholder="Например, Product Designer" required>
+      <button type="submit" class="btn btn-primary">Добавить роль</button>
+    </form>
+  </div>
+  {% endif %}
 </section>
 {% endblock %}

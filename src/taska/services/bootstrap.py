@@ -8,6 +8,7 @@ from taska.models.invitation import Invitation
 from taska.models.project import Task
 from taska.models.site_settings import SiteSettings
 from taska.models.user import User
+from taska.models.role import CustomRole  # noqa: F401 - registers the table before create_all
 from taska.utils.datetime import utc_now
 
 

@@ -969,7 +969,13 @@ img.avatar-large {
 
 .profile-menu-head span:last-child {
   display: grid;
+  min-width: 0;
+  overflow: hidden;
 }
+
+.profile-menu-identity strong,
+.profile-menu-identity small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.role-create-panel { margin-top: 1rem; }
 
 .profile-menu-head small {
   color: var(--muted);

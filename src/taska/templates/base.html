@@ -76,7 +76,7 @@
                 {% if user.avatar_data %}<img src="/avatars/{{ user.id }}" class="avatar-large" alt="">
                 {% elif user.discord_avatar_url %}<img src="{{ user.discord_avatar_url }}" class="avatar-large" alt="">
                 {% else %}<span class="avatar-large">{{ (user.display_name or user.username)[0] | upper }}</span>{% endif %}
-                <span><strong>{{ user.display_name or user.username }}</strong><small>@{{ user.username }}</small></span>
+                <span class="profile-menu-identity"><strong title="{{ user.display_name or user.username }}">{{ user.display_name or user.username }}</strong><small>@{{ user.username }}</small></span>
               </div>
               <a href="/account">Настройки профиля</a>
               <form action="/logout" method="post">
