@@ -52,6 +52,7 @@
         {% else %}
           <p class="muted">Тегов пока нет — задача будет доступна всем.</p>
         {% endif %}
+        {% if access_groups %}<fieldset class="form-section"><legend>Кому видна задача</legend>{% for group in access_groups %}<label class="checkbox"><input type="checkbox" name="view_group_ids" value="{{ group.id }}">{{ group.name }}</label>{% endfor %}<small class="muted">Если не выбрать группы, задача видна всем участникам.</small></fieldset>{% endif %}
         <button type="submit" class="btn btn-primary">Создать задачу</button>
       </form>
     </div>
@@ -62,10 +63,10 @@
     <table>
       <thead>
         <tr>
-          <th>Задача</th>
-          <th>Статус</th>
-          <th>Исполнитель</th>
-          <th>Теги</th>
+          <th><details class="table-criteria"><summary>Задача</summary><div><a href="/projects/{{ project.id }}?sort=title&direction=asc">А—Я</a><a href="/projects/{{ project.id }}?sort=title&direction=desc">Я—А</a></div></details></th>
+          <th><details class="table-criteria"><summary>Статус</summary><div><a href="/projects/{{ project.id }}">Все статусы</a>{% for code, label in statuses.items() %}<a href="/projects/{{ project.id }}?status={{ code }}&sort=title">{{ label }}</a>{% endfor %}</div></details></th>
+          <th><details class="table-criteria"><summary>Исполнитель</summary><div><a href="/projects/{{ project.id }}?sort=assignee&direction=asc">А—Я</a><a href="/projects/{{ project.id }}?sort=assignee&direction=desc">Я—А</a></div></details></th>
+          <th><details class="table-criteria"><summary>Теги</summary><div><a href="/projects/{{ project.id }}?sort=tags&direction=asc">А—Я</a><a href="/projects/{{ project.id }}?sort=tags&direction=desc">Я—А</a></div></details></th>
         </tr>
       </thead>
       <tbody>

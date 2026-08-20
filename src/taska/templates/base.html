@@ -14,7 +14,7 @@
     if (prefs.accent) document.documentElement.style.setProperty('--primary', prefs.accent);
     if (prefs.font_scale) document.documentElement.style.setProperty('--font-scale', prefs.font_scale);
   </script>
-  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/style.css?v=20260820-shell1">
 </head>
 <body>
   <div class="page-loader" aria-hidden="true"><span class="page-loader-mark">T</span><span class="page-loader-bar"></span></div>
@@ -29,7 +29,8 @@
             <div class="dropdown-panel nav-menu" data-dropdown-panel hidden>
               <p class="dropdown-title">Доступные страницы</p>
               <a href="/"><span>⌂</span> Дашборд</a>
-              <a href="/projects"><span>▦</span> Проекты</a>
+              <a href="/projects"><span>▦</span> Пространства</a>
+              <a href="/docs"><span>▤</span> Документация</a>
               <a href="/profiles"><span>◉</span> Команда</a>
               <a href="/notifications"><span>♢</span> Уведомления</a>
               <a href="/account"><span>●</span> Мой профиль</a>
@@ -39,6 +40,7 @@
                 <a href="/admin"><span>⚙</span> Панель</a>
                 <a href="/admin/invitations"><span>＋</span> Приглашения</a>
                 <a href="/admin/settings"><span>◆</span> Настройки</a>
+                <a href="/admin/groups"><span>◎</span> Группы доступа</a>
               {% endif %}
               <div class="dropdown-separator"></div>
               <label class="theme-control">

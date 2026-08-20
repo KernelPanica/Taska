@@ -13,8 +13,10 @@ from taska.config import get_settings
 from taska.routes import (
     account,
     admin,
+    admin_groups,
     auth,
     dashboard,
+    documentation,
     invite,
     notifications,
     oauth,
@@ -61,6 +63,9 @@ app = FastAPI(
     version=__version__,
     debug=settings.debug,
     lifespan=lifespan,
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    openapi_url="/api/openapi.json",
 )
 
 static_dir = Path(__file__).resolve().parent / "static"
@@ -76,8 +81,10 @@ app.include_router(dashboard.router)
 app.include_router(account.router)
 app.include_router(profiles.router)
 app.include_router(projects.router)
+app.include_router(documentation.router)
 app.include_router(notifications.router)
 app.include_router(admin.router)
+app.include_router(admin_groups.router)
 app.include_router(invite.router)
 
 

@@ -9,13 +9,12 @@
       <h1>Привет, {{ dashboard.display_name }}</h1>
       <p class="muted">{{ dashboard.position_label }}{% if dashboard.experience_years is not none %} · {{ dashboard.experience_years }} лет{% endif %}</p>
     </div>
-    <a href="/account" class="btn btn-primary">Мой профиль</a>
   </div>
 
   <div class="actions-grid dashboard-quick-actions">
-    <a href="/projects" class="action-card"><h3>Найти задачу</h3><p>Посмотреть проекты и доступные задачи</p></a>
+    <a href="/projects" class="action-card"><h3>Найти задачу</h3><p>Посмотреть пространства и доступные задачи</p></a>
     <a href="/notifications" class="action-card"><h3>Уведомления</h3><p>Решения по заявкам и изменения задач</p></a>
-    <a href="/profiles/{{ user.username }}" class="action-card"><h3>Мой публичный профиль</h3><p>Навыки, роль и информация для команды</p></a>
+    <a href="/profiles/{{ user.username }}" class="action-card"><h3>Мой профиль</h3><p>Публичная страница, навыки и роль</p></a>
   </div>
 
   <div class="stats-grid">
@@ -40,7 +39,7 @@
   <div class="split-layout">
     <div class="card chart-card"><h2>Мои задачи по статусам</h2><div class="bar-chart">
       {% set chart_counts = task_status_counts | default({}, true) %}{% set chart_total = chart_counts.values() | sum %}
-      {% for code, label in statuses.items() %}{% set count = chart_counts.get(code, 0) %}<div class="bar-row"><span>{{ label }}</span><div class="bar-track"><i style="width: {{ (count / (chart_total or 1) * 100) | round(0) }}%"></i></div><b>{{ count }}</b></div>{% endfor %}
+      {% for code, label in statuses.items() %}{% set count = chart_counts.get(code, 0) %}<a class="bar-row" href="/projects?status={{ code }}"><span>{{ label }}</span><div class="bar-track"><i style="width: {{ (count / (chart_total or 1) * 100) | round(0) }}%"></i></div><b>{{ count }}</b></a>{% endfor %}
     </div></div>
     <div class="card">
       <h2>Текущая задача</h2>
@@ -53,17 +52,14 @@
     </div>
 
     <div class="card">
-      <h2>Мои навыки</h2>
-      <div class="tag-list">
-        {% for tag in dashboard.tags %}
-          <span class="tag">{{ tag.name }}</span>
+      <h2>Последние события</h2>
+      <div class="event-list">
+        {% for event in dashboard.recent_events %}
+          <a class="event-item" href="{{ event.url }}"><strong>{{ event.title }}</strong><small>{{ event.body }}</small></a>
         {% else %}
-          <p class="muted">Теги не назначены. <a href="/account">Профиль</a></p>
+          <p class="muted">Новых событий нет.</p>
         {% endfor %}
       </div>
-      {% if dashboard.pending_tag_suggestions %}
-        <p class="muted">Ожидают рассмотрения: {{ dashboard.pending_tag_suggestions }}</p>
-      {% endif %}
     </div>
   </div>
 

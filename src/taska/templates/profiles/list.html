@@ -16,6 +16,7 @@
           <h2>{{ item.user.display_name or item.user.username }}</h2>
           <span class="muted">@{{ item.user.username }}</span>
         </div>
+        {% if item.user.is_admin %}<span class="badge badge-active">Администратор</span>{% endif %}
         <p class="profile-position">{{ item.position_label }}</p>
         {% if item.user.experience_years is not none %}
           <p class="muted">Стаж: {{ item.user.experience_years }} лет</p>

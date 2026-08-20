@@ -9,6 +9,7 @@ from taska.models.project import Task
 from taska.models.site_settings import SiteSettings
 from taska.models.user import User
 from taska.models.role import CustomRole  # noqa: F401 - registers the table before create_all
+from taska.models.knowledge import AccessGroup  # noqa: F401 - registers knowledge and ACL tables
 from taska.utils.datetime import utc_now
 
 
@@ -17,6 +18,21 @@ def init_db() -> None:
     _migrate_user_profile_columns()
     _migrate_project_columns()
     _migrate_invitation_columns()
+    _migrate_storage_columns()
+
+
+def _migrate_storage_columns() -> None:
+    inspector = inspect(engine)
+    if "storage_connections" not in inspector.get_table_names():
+        return
+    existing = {column["name"] for column in inspector.get_columns("storage_connections")}
+    with engine.begin() as connection:
+        if "host" not in existing:
+            connection.execute(text("ALTER TABLE storage_connections ADD COLUMN host VARCHAR(255) NOT NULL DEFAULT ''"))
+        if "username" not in existing:
+            connection.execute(text("ALTER TABLE storage_connections ADD COLUMN username VARCHAR(255) NOT NULL DEFAULT ''"))
+        if "password" not in existing:
+            connection.execute(text("ALTER TABLE storage_connections ADD COLUMN password VARCHAR(1024) NOT NULL DEFAULT ''"))
 
 
 def _migrate_invitation_columns() -> None:

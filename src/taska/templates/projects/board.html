@@ -2,12 +2,12 @@
 {% block title %}Kanban — {{ project.name }}{% endblock %}
 {% block main_class %}kanban-main{% endblock %}
 {% block content %}
-<section class="kanban-page">
-  <header class="sp-header kanban-page-header">
-    <div><p class="sp-breadcrumb"><a href="/projects">Проекты</a><span>/</span>{{ project.name }}</p><h1>Kanban</h1></div>
-    <nav class="sp-view-nav"><span>Kanban</span><a href="/projects/{{ project.id }}/sprints">Спринты</a></nav>
+<section class="kanban-page kanban-redesigned">
+  <header class="kanban-hero">
+    <div><p class="sp-breadcrumb"><a href="/projects">Пространства</a><span>/</span>{{ project.name }}</p><h1>Рабочая доска</h1><p class="muted">Перетаскивайте задачи между этапами и следите за потоком работы.</p></div>
+    <nav class="sp-view-nav"><span>Доска</span><a href="/projects/{{ project.id }}/sprints">Спринты</a></nav>
   </header>
-  <div class="kanban-tools">
+  <div class="kanban-tools kanban-toolbar-panel">
     <form method="get" class="kanban-filters">
       <select name="sprint_id" aria-label="Спринт"><option value="">Все спринты</option>{% for sprint in project.sprints %}<option value="{{ sprint.id }}" {% if filter_sprint_id == sprint.id %}selected{% endif %}>{{ sprint.name }}</option>{% endfor %}</select>
       <select name="assignee_id" aria-label="Исполнитель"><option value="">Все исполнители</option>{% for member in assignees %}<option value="{{ member.id }}" {% if filter_assignee_id == member.id %}selected{% endif %}>{{ member.display_name or member.username }}</option>{% endfor %}</select>
@@ -19,10 +19,10 @@
   </div>
   {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
   {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
-  <div class="kanban-board">
+  <div class="kanban-board" aria-label="Доска задач">
     {% for code, label in statuses.items() %}
     <section class="kanban-column" data-status="{{ code }}">
-      <header><span class="kanban-column-color status-color-{{ loop.index0 % 7 }}"></span><h2>{{ label }}</h2><span class="kanban-count">{{ columns.get(code, []) | length }}{% if wip_limits.get(code) %}/{{ wip_limits.get(code) }}{% endif %}</span><button type="button" class="kanban-column-menu" aria-label="Меню колонки">•••</button></header>
+      <header class="kanban-column-header"><div class="kanban-column-title"><span class="kanban-column-color status-color-{{ loop.index0 % 7 }}"></span><h2>{{ label }}</h2></div><span class="kanban-count">{{ columns.get(code, []) | length }}{% if wip_limits.get(code) %}/{{ wip_limits.get(code) }}{% endif %}</span></header>
       <div class="kanban-cards">
         {% for task in columns.get(code, []) %}
         <article class="kanban-card" data-task-id="{{ task.id }}">

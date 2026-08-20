@@ -53,7 +53,6 @@ def list_member_profiles(db: Session) -> list[User]:
     return list(
         db.scalars(
             select(User)
-            .where(User.is_admin.is_(False))
             .options(selectinload(User.tags))
             .order_by(User.username)
         ).all()

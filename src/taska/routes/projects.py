@@ -6,7 +6,7 @@ from urllib.parse import quote, unquote
 from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import select
 
 from taska.auth.dependencies import get_current_user
@@ -14,6 +14,7 @@ from taska.database import get_db
 from taska.models.configuration import WipLimit
 from taska.models.project import Sprint, SprintSnapshot, Task, TaskAttachment
 from taska.models.user import User
+from taska.models.knowledge import AccessGroup
 from taska.services.bootstrap import get_site_context
 from taska.services.profiles import list_all_tags
 from taska.services.projects import (
@@ -25,6 +26,7 @@ from taska.services.projects import (
     create_sprint,
     create_project_status,
     create_task,
+    can_view_task,
     get_project,
     get_project_statuses,
     get_task,
@@ -54,12 +56,17 @@ def projects_list(
     request: Request,
     user: User | None = Depends(get_current_user),
     db: Session = Depends(get_db),
+    status: str | None = None,
 ):
     current = _require_login(user)
     if isinstance(current, RedirectResponse):
         return current
 
     projects = list_projects(db)
+    if status:
+        for project in projects:
+            project.tasks = [task for task in project.tasks if task.status == status and can_view_task(current, task)]
+        projects = [project for project in projects if project.tasks]
     site = get_site_context(db)
     return templates.TemplateResponse(
         request,
@@ -71,6 +78,17 @@ def projects_list(
             "is_pm": is_pm(current),
         },
     )
+
+
+@router.get("/tasks/status/{status}", response_class=HTMLResponse)
+def tasks_by_status(status: str, request: Request, user: User | None = Depends(get_current_user), db: Session = Depends(get_db)):
+    current = _require_login(user)
+    if isinstance(current, RedirectResponse):
+        return current
+    tasks = list(db.scalars(select(Task).where(Task.status == status).options(selectinload(Task.project), selectinload(Task.assignee), selectinload(Task.view_groups))).all())
+    tasks = [task for task in tasks if can_view_task(current, task)]
+    labels = {"unassigned": "Не назначена", "in_progress": "В работе", "in_review": "На проверке", "paused": "Пауза", "needs_changes": "Изменения", "done": "Готово", "closed": "Закрыта"}
+    return templates.TemplateResponse(request, "projects/status_tasks.html", {"user": current, "site": get_site_context(db), "tasks": tasks, "status_label": labels.get(status, status)})
 
 
 @router.post("/projects")
@@ -100,6 +118,9 @@ def project_detail(
     db: Session = Depends(get_db),
     error: str | None = None,
     success: str | None = None,
+    status: str | None = None,
+    sort: str = "title",
+    direction: str = "asc",
 ):
     current = _require_login(user)
     if isinstance(current, RedirectResponse):
@@ -108,6 +129,17 @@ def project_detail(
     project = get_project(db, project_id)
     if project is None:
         return RedirectResponse("/projects", status_code=303)
+    project.tasks = [task for task in project.tasks if can_view_task(current, task)]
+    if status:
+        project.tasks = [task for task in project.tasks if task.status == status]
+    direction = "desc" if direction.lower() == "desc" else "asc"
+    key_funcs = {
+        "title": lambda task: (task.title or "").casefold(),
+        "status": lambda task: (get_project_statuses(db, project.id).get(task.status, task.status)).casefold(),
+        "assignee": lambda task: ((task.assignee.display_name or task.assignee.username) if task.assignee else "").casefold(),
+        "tags": lambda task: ", ".join(sorted(tag.name for tag in task.required_tags)).casefold(),
+    }
+    project.tasks.sort(key=key_funcs.get(sort, key_funcs["title"]), reverse=direction == "desc")
 
     site = get_site_context(db)
     return templates.TemplateResponse(
@@ -120,8 +152,12 @@ def project_detail(
             "is_pm": is_pm(current),
             "statuses": get_project_statuses(db, project.id),
             "all_tags": list_all_tags(db) if is_pm(current) else [],
+            "access_groups": list(db.scalars(select(AccessGroup).order_by(AccessGroup.name)).all()) if is_pm(current) else [],
             "error": unquote(error) if error else None,
             "success": unquote(success) if success else None,
+            "filter_status": status,
+            "sort": sort,
+            "direction": direction,
         },
     )
 
@@ -133,6 +169,7 @@ def create_task_submit(
     description: str = Form(""),
     enforce_single_task: str | None = Form(None),
     required_tag_ids: Annotated[list[int], Form()] = [],
+    view_group_ids: Annotated[list[int], Form()] = [],
     user: User | None = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> RedirectResponse:
@@ -153,6 +190,7 @@ def create_task_submit(
             description=description,
             enforce_single_task=enforce_single_task == "on",
             required_tag_ids=required_tag_ids,
+            view_group_ids=view_group_ids,
         )
     except ValueError as exc:
         return RedirectResponse(f"/projects/{project_id}?error={quote(str(exc))}", status_code=303)
@@ -211,6 +249,10 @@ def project_sprints(
     project = get_project(db, project_id)
     if project is None:
         return RedirectResponse("/projects", status_code=303)
+    # Analytics must use the same visibility rules as the board and task list.
+    project.tasks = [task for task in project.tasks if can_view_task(current, task)]
+    for sprint in project.sprints:
+        sprint.tasks = [task for task in sprint.tasks if can_view_task(current, task)]
     statuses = get_project_statuses(db, project.id)
     done_codes = {code for code, label in statuses.items() if code in {"done", "closed", "completed"} or "готов" in label.lower() or "закры" in label.lower()}
     selected_sprint = next((s for s in project.sprints if s.id == sprint_id), None)
@@ -354,6 +396,8 @@ def task_detail(
     task = get_task(db, task_id)
     if task is None or task.project_id != project_id:
         return RedirectResponse(f"/projects/{project_id}", status_code=303)
+    if not can_view_task(current, task):
+        return RedirectResponse(f"/projects/{project_id}?error={quote('Нет доступа к задаче')}", status_code=303)
 
     site = get_site_context(db)
     can_apply = (
@@ -551,6 +595,7 @@ def project_board(
     project = get_project(db, project_id)
     if project is None:
         return RedirectResponse("/projects", status_code=303)
+    project.tasks = [task for task in project.tasks if can_view_task(current, task)]
     statuses = get_project_statuses(db, project.id)
     columns = {code: [] for code in statuses}
     filtered_tasks = project.tasks
@@ -665,10 +710,23 @@ def task_attachment(
     item = db.get(TaskAttachment, attachment_id)
     if item is None:
         return Response(status_code=404)
+    task = get_task(db, item.task_id)
+    if task is None or not can_view_task(current, task):
+        return Response(status_code=404)
+    filename = item.filename or "file"
+    # HTTP headers are Latin-1 in Starlette; keep an ASCII fallback and carry
+    # the original Unicode filename through RFC 5987's filename* parameter.
+    ascii_name = filename.encode("ascii", "ignore").decode("ascii").strip() or "file"
+    ascii_name = ascii_name.replace('"', "'")
+    encoded_name = quote(filename, safe="")
     return Response(
         item.data,
         media_type=item.mime_type,
-        headers={"Content-Disposition": f'inline; filename="{item.filename}"'},
+        headers={
+            "Content-Disposition": (
+                f'inline; filename="{ascii_name}"; filename*=UTF-8\'\'{encoded_name}'
+            )
+        },
     )
 
 

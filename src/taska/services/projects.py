@@ -24,6 +24,7 @@ from taska.models.project import (
 
 from taska.models.tag import Tag
 from taska.models.user import User
+from taska.models.knowledge import AccessGroup
 from taska.services.notifications import create_notification, notify_users, pm_user_ids
 from taska.utils.datetime import utc_now
 
@@ -32,6 +33,13 @@ def is_pm(user: User) -> bool:
     if user.is_admin:
         return True
     return bool(user.position_code and user.position_code.startswith(PM_POSITION_PREFIX))
+
+
+def can_view_task(user: User, task: Task) -> bool:
+    if user.is_admin or task.assignee_id == user.id or task.created_by_id == user.id:
+        return True
+    groups = getattr(task, "view_groups", [])
+    return not groups or any(group in getattr(user, "access_groups", []) for group in groups)
 
 
 def create_sprint(
@@ -152,6 +160,7 @@ def get_project(db: Session, project_id: int) -> Project | None:
         .options(
             selectinload(Project.sprints),
             selectinload(Project.tasks).selectinload(Task.required_tags),
+            selectinload(Project.tasks).selectinload(Task.view_groups),
             selectinload(Project.tasks).selectinload(Task.assignee),
             selectinload(Project.tasks).selectinload(Task.applications),
         )
@@ -165,6 +174,7 @@ def get_task(db: Session, task_id: int) -> Task | None:
         .options(
             selectinload(Task.project),
             selectinload(Task.required_tags),
+            selectinload(Task.view_groups),
             selectinload(Task.assignee),
             selectinload(Task.applications).selectinload(TaskApplication.user),
             selectinload(Task.creator),
@@ -199,6 +209,7 @@ def create_task(
     description: str,
     enforce_single_task: bool,
     required_tag_ids: list[int],
+    view_group_ids: list[int] | None = None,
 ) -> Task:
     if not is_pm(pm):
         raise ValueError("Создавать задачи могут только PM")
@@ -217,6 +228,8 @@ def create_task(
     if required_tag_ids:
         tags = list(db.scalars(select(Tag).where(Tag.id.in_(required_tag_ids))).all())
         task.required_tags = tags
+    if view_group_ids:
+        task.view_groups = list(db.scalars(select(AccessGroup).where(AccessGroup.id.in_(view_group_ids))).all())
 
     db.commit()
     db.refresh(task)

@@ -4,11 +4,13 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 
 from taska.auth.dependencies import get_current_user
 from taska.constants import TASK_STATUSES
 from taska.database import get_db
 from taska.models.user import User
+from taska.models.notification import Notification
 from taska.services.account import get_user_dashboard
 from taska.services.bootstrap import get_admin_stats, get_site_context
 from taska.services.projects import is_pm
@@ -47,6 +49,7 @@ def home(
         )
 
     dashboard = get_user_dashboard(db, user)
+    dashboard["recent_events"] = list(db.scalars(select(Notification).where(Notification.user_id == user.id).order_by(Notification.created_at.desc()).limit(6)).all())
     return templates.TemplateResponse(
         request,
         "dashboard/member.html",

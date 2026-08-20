@@ -53,3 +53,4 @@ __all__ = [
     "User",
 ]
 from taska.models.role import CustomRole
+from taska.models.knowledge import AccessGroup, DocumentNode, DocumentPermission, StorageConnection

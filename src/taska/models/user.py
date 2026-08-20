@@ -45,3 +45,4 @@ class User(Base):
     passkeys: Mapped[list["PasskeyCredential"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
+    access_groups = relationship("AccessGroup", secondary="group_members", back_populates="members")
