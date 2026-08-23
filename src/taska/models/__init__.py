@@ -52,5 +52,5 @@ __all__ = [
     "TaskAttachment",
     "User",
 ]
-from taska.models.role import CustomRole
+from taska.models.role import CustomRole, DisabledSystemRole
 from taska.models.knowledge import AccessGroup, DocumentNode, DocumentPermission, StorageConnection

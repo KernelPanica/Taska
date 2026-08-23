@@ -1,1 +1,59 @@
-{% extends "base.html" %}{% block title %}Группы доступа — {{ site.app_name }}{% endblock %}{% block content %}<section><p><a href="/admin">← Панель администратора</a></p><h1>Группы доступа</h1><p class="muted">Группы используются для доступа к папкам, документам и задачам.</p><div class="card inner-card"><form method="post" action="/admin/groups" class="form-inline-row"><input name="name" placeholder="Core, Directorate" required><input name="description" placeholder="Описание"><button class="btn btn-primary">Создать группу</button></form></div>{% for group in groups %}<div class="card inner-card"><form method="post" action="/admin/groups/{{ group.id }}" class="form-inline-row"><input name="name" value="{{ group.name }}" required><input name="description" value="{{ group.description }}"><button class="btn btn-ghost">Сохранить</button></form><p class="muted">Участники: {{ group.members|map(attribute='username')|join(', ') or 'нет' }}</p><form method="post" action="/admin/groups/{{ group.id }}/members" class="form-inline-row"><select name="user_id">{% for member in users %}<option value="{{ member.id }}">{{ member.display_name or member.username }}</option>{% endfor %}</select><button class="btn btn-ghost">Добавить участника</button></form></div>{% endfor %}</section>{% endblock %}
+{% extends "base.html" %}
+{% block title %}Роли и группы — {{ site.app_name }}{% endblock %}
+{% block content %}
+<section>
+  <p><a href="/admin">← Панель администратора</a></p>
+  <h1>Роли и группы</h1>
+  {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+
+  <div id="roles" class="card inner-card">
+    <h2>Роли</h2>
+    <div class="role-list">
+      {% for code, name in system_roles.items() %}
+      <div class="role-row"><span>{{ name }}</span><code>{{ code }}</code><form method="post" action="/admin/roles/system/{{ code }}/delete"><button class="btn btn-ghost">Удалить</button></form></div>
+      {% endfor %}
+      {% for role in roles %}
+      <div class="role-row"><span>{{ role.name }}</span><code>{{ role.code }}</code><form method="post" action="/admin/roles/{{ role.id }}/delete"><button class="btn btn-ghost">Удалить</button></form></div>
+      {% endfor %}
+    </div>
+    <form method="post" action="/admin/roles" class="form-inline-row">
+      <label>Название новой роли<input name="name" placeholder="Например, Аналитик" required minlength="2" maxlength="128"></label>
+      <button class="btn btn-primary">Добавить роль</button>
+    </form>
+  </div>
+
+  <div id="groups" class="card inner-card">
+    <h2>Группы доступа</h2>
+    <form method="post" action="/admin/groups" class="form-inline-row">
+      <label>Название группы<input name="name" placeholder="Например, Руководители" required maxlength="96"></label>
+      <label>Описание<input name="description" placeholder="К каким ресурсам нужен доступ"></label>
+      <button class="btn btn-primary">Создать группу</button>
+    </form>
+  </div>
+
+  {% for group in groups %}
+  <div class="card inner-card">
+    <h3>{{ group.name }}</h3>
+    <form method="post" action="/admin/groups/{{ group.id }}" class="form-inline-row">
+      <label>Название<input name="name" value="{{ group.name }}" required maxlength="96"></label>
+      <label>Описание<input name="description" value="{{ group.description }}" placeholder="Описание группы"></label>
+      <button class="btn btn-ghost">Сохранить</button>
+    </form>
+    <div class="role-list">
+      {% for member in group.members %}
+      <div class="role-row">
+        <span>{{ member.display_name or member.username }}</span>
+        <code>{{ member.username }}</code>
+        <form method="post" action="/admin/groups/{{ group.id }}/members/{{ member.id }}/delete"><button class="btn btn-ghost">Удалить из группы</button></form>
+      </div>
+      {% else %}<p class="muted">В группе пока нет участников.</p>{% endfor %}
+    </div>
+    <form method="post" action="/admin/groups/{{ group.id }}/members" class="form-inline-row">
+      <label>Добавить участника<select name="user_id">{% for member in users %}<option value="{{ member.id }}">{{ member.display_name or member.username }}</option>{% endfor %}</select></label>
+      <button class="btn btn-ghost">Добавить</button>
+    </form>
+    <form method="post" action="/admin/groups/{{ group.id }}/delete"><button class="btn btn-ghost">Удалить группу</button></form>
+  </div>
+  {% else %}<p class="muted">Групп доступа пока нет.</p>{% endfor %}
+</section>
+{% endblock %}

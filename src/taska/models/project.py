@@ -86,6 +86,7 @@ class Task(Base):
     creator: Mapped["User"] = relationship(foreign_keys=[created_by_id])
     assignee: Mapped["User | None"] = relationship(foreign_keys=[assignee_id])
     view_groups = relationship("AccessGroup", secondary="task_view_groups", back_populates="visible_tasks")
+    view_users = relationship("User", secondary="task_view_users", back_populates="visible_tasks")
     required_tags: Mapped[list["Tag"]] = relationship(secondary=task_required_tags)
     applications: Mapped[list["TaskApplication"]] = relationship(
         back_populates="task", cascade="all, delete-orphan"

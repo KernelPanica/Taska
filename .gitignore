@@ -33,7 +33,8 @@ env/
 .env.local
 .env.*.local
 .env.quick-start
-
+.codex
+.agents
 # Local instructions for AI coding agents
 AGENTS.md
 

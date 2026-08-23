@@ -37,6 +37,17 @@
         </fieldset>
 
         <fieldset class="form-section">
+          <legend>Роли организации</legend>
+          <label>
+            Предустановленный набор ролей
+            <select name="role_preset">
+              {% for code, preset in role_presets.items() %}<option value="{{ code }}">{{ preset.name }}</option>{% endfor %}
+            </select>
+          </label>
+          <small class="muted">Набор можно изменить позже на странице «Роли и группы».</small>
+        </fieldset>
+
+        <fieldset class="form-section">
           <legend>Администратор</legend>
           <label>
             Логин

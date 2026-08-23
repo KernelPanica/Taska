@@ -27,15 +27,18 @@ def allowed_nodes(db: Session, user: User) -> list[DocumentNode]:
 
 
 @router.get("/docs", response_class=HTMLResponse)
-def documentation_page(request: Request, user: User | None = Depends(get_current_user), db: Session = Depends(get_db), success: str | None = None, error: str | None = None, tab: str = "documents"):
+def documentation_page(request: Request, user: User | None = Depends(get_current_user), db: Session = Depends(get_db), success: str | None = None, error: str | None = None, tab: str = "documents", node: int | None = None):
     if user is None:
         return RedirectResponse("/login", status_code=303)
+    visible_nodes = allowed_nodes(db, user)
+    selected_node = next((item for item in visible_nodes if item.id == node), None)
     return templates.TemplateResponse(request, "documentation/index.html", {
-        "user": user, "site": get_site_context(db), "nodes": allowed_nodes(db, user),
+        "user": user, "site": get_site_context(db), "nodes": visible_nodes,
         "storages": list(db.scalars(select(StorageConnection).order_by(StorageConnection.name)).all()),
         "groups": list(db.scalars(select(AccessGroup).options(selectinload(AccessGroup.members)).order_by(AccessGroup.name)).all()),
         "users": list(db.scalars(select(User).order_by(User.username)).all()), "providers": PROVIDERS,
         "success": unquote(success) if success else None, "error": unquote(error) if error else None, "tab": tab,
+        "selected_node": selected_node,
     })
 
 
@@ -83,7 +86,7 @@ def create_storage(name: str = Form(...), provider: str = Form(...), root_path: 
 
 @router.post("/docs/nodes")
 def create_node(storage_id: int = Form(...), name: str = Form(...), path: str = Form(...), node_type: str = Form("file"), external_url: str = Form(""), user: User | None = Depends(get_current_user), db: Session = Depends(get_db)):
-    if user is None or not user.is_admin: return RedirectResponse("/docs", status_code=303)
+    if user is None: return RedirectResponse("/login", status_code=303)
     storage = db.get(StorageConnection, storage_id)
     clean_path = "/" + "/".join(part for part in path.strip().split("/") if part) if path.strip() else "/"
     if storage is None or (storage.root_path != "/" and clean_path != storage.root_path and not clean_path.startswith(storage.root_path.rstrip("/") + "/")):
@@ -91,8 +94,18 @@ def create_node(storage_id: int = Form(...), name: str = Form(...), path: str = 
     suffix = clean_path.rsplit("/", 1)[-1].lower()
     if not external_url and suffix.endswith((".drawio", ".drawio.xml", ".canvas")):
         external_url = ""
-    db.add(DocumentNode(storage_id=storage_id, name=name.strip()[:256], path=clean_path, is_folder=node_type == "folder", external_url=external_url.strip())); db.commit()
+    kind = node_type if node_type in {"doc", "form", "sheet", "drawio", "canvas", "folder"} else "doc"
+    db.add(DocumentNode(storage_id=storage_id, name=name.strip()[:256], path=clean_path, kind=kind, is_folder=kind == "folder", external_url=external_url.strip())); db.commit()
     return RedirectResponse("/docs?success=Элемент добавлен", status_code=303)
+
+
+@router.post("/docs/nodes/{node_id}/content")
+def save_node_content(node_id: int, content: str = Form(""), user: User | None = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None: return RedirectResponse("/login", status_code=303)
+    node = next((item for item in allowed_nodes(db, user) if item.id == node_id), None)
+    if node is None or node.is_folder: return RedirectResponse("/docs?error=Документ не найден", status_code=303)
+    node.content = content[:2_000_000]; db.commit()
+    return RedirectResponse(f"/docs?node={node_id}&success=Сохранено", status_code=303)
 
 
 @router.post("/docs/nodes/{node_id}/permissions")

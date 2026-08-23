@@ -10,3 +10,9 @@ class CustomRole(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     code: Mapped[str] = mapped_column(String(32), unique=True, index=True)
     name: Mapped[str] = mapped_column(String(128), unique=True)
+
+
+class DisabledSystemRole(Base):
+    __tablename__ = "disabled_system_roles"
+
+    code: Mapped[str] = mapped_column(String(32), primary_key=True)

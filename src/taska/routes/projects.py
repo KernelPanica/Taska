@@ -153,6 +153,7 @@ def project_detail(
             "statuses": get_project_statuses(db, project.id),
             "all_tags": list_all_tags(db) if is_pm(current) else [],
             "access_groups": list(db.scalars(select(AccessGroup).order_by(AccessGroup.name)).all()) if is_pm(current) else [],
+            "access_users": list(db.scalars(select(User).order_by(User.username)).all()) if is_pm(current) else [],
             "error": unquote(error) if error else None,
             "success": unquote(success) if success else None,
             "filter_status": status,
@@ -170,6 +171,7 @@ def create_task_submit(
     enforce_single_task: str | None = Form(None),
     required_tag_ids: Annotated[list[int], Form()] = [],
     view_group_ids: Annotated[list[int], Form()] = [],
+    view_user_ids: Annotated[list[int], Form()] = [],
     user: User | None = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> RedirectResponse:
@@ -191,6 +193,7 @@ def create_task_submit(
             enforce_single_task=enforce_single_task == "on",
             required_tag_ids=required_tag_ids,
             view_group_ids=view_group_ids,
+            view_user_ids=view_user_ids,
         )
     except ValueError as exc:
         return RedirectResponse(f"/projects/{project_id}?error={quote(str(exc))}", status_code=303)

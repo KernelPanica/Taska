@@ -19,6 +19,19 @@ def init_db() -> None:
     _migrate_project_columns()
     _migrate_invitation_columns()
     _migrate_storage_columns()
+    _migrate_document_columns()
+
+
+def _migrate_document_columns() -> None:
+    inspector = inspect(engine)
+    if "document_nodes" not in inspector.get_table_names():
+        return
+    existing = {column["name"] for column in inspector.get_columns("document_nodes")}
+    with engine.begin() as connection:
+        if "kind" not in existing:
+            connection.execute(text("ALTER TABLE document_nodes ADD COLUMN kind VARCHAR(32) NOT NULL DEFAULT 'doc'"))
+        if "content" not in existing:
+            connection.execute(text("ALTER TABLE document_nodes ADD COLUMN content TEXT NOT NULL DEFAULT ''"))
 
 
 def _migrate_storage_columns() -> None:

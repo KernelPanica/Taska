@@ -38,6 +38,9 @@ def is_pm(user: User) -> bool:
 def can_view_task(user: User, task: Task) -> bool:
     if user.is_admin or task.assignee_id == user.id or task.created_by_id == user.id:
         return True
+    users = getattr(task, "view_users", [])
+    if users:
+        return any(allowed.id == user.id for allowed in users)
     groups = getattr(task, "view_groups", [])
     return not groups or any(group in getattr(user, "access_groups", []) for group in groups)
 
@@ -210,6 +213,7 @@ def create_task(
     enforce_single_task: bool,
     required_tag_ids: list[int],
     view_group_ids: list[int] | None = None,
+    view_user_ids: list[int] | None = None,
 ) -> Task:
     if not is_pm(pm):
         raise ValueError("Создавать задачи могут только PM")
@@ -230,6 +234,8 @@ def create_task(
         task.required_tags = tags
     if view_group_ids:
         task.view_groups = list(db.scalars(select(AccessGroup).where(AccessGroup.id.in_(view_group_ids))).all())
+    if view_user_ids:
+        task.view_users = list(db.scalars(select(User).where(User.id.in_(view_user_ids))).all())
 
     db.commit()
     db.refresh(task)

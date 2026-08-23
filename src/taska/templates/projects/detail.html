@@ -52,7 +52,7 @@
         {% else %}
           <p class="muted">Тегов пока нет — задача будет доступна всем.</p>
         {% endif %}
-        {% if access_groups %}<fieldset class="form-section"><legend>Кому видна задача</legend>{% for group in access_groups %}<label class="checkbox"><input type="checkbox" name="view_group_ids" value="{{ group.id }}">{{ group.name }}</label>{% endfor %}<small class="muted">Если не выбрать группы, задача видна всем участникам.</small></fieldset>{% endif %}
+        {% if access_groups or access_users %}<fieldset class="form-section"><legend>Кому видна задача</legend>{% for group in access_groups %}<label class="checkbox"><input type="checkbox" name="view_group_ids" value="{{ group.id }}">Группа: {{ group.name }}</label>{% endfor %}{% for member in access_users %}<label class="checkbox"><input type="checkbox" name="view_user_ids" value="{{ member.id }}">Пользователь: {{ member.display_name or member.username }}</label>{% endfor %}<small class="muted">Явные права пользователей имеют приоритет над правами групп. Если ничего не выбрать, задача видна всем.</small></fieldset>{% endif %}
         <button type="submit" class="btn btn-primary">Создать задачу</button>
       </form>
     </div>

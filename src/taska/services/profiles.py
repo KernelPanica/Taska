@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from taska.models.tag import Tag, TagSuggestion
 from taska.models.user import User
-from taska.models.role import CustomRole
+from taska.models.role import CustomRole, DisabledSystemRole
 from taska.roles import POSITION_CODES
 from taska.utils.datetime import utc_now
 
@@ -27,7 +27,8 @@ def get_position_label(position_code: str | None) -> str:
 
 
 def list_roles(db: Session) -> dict[str, str]:
-    roles = dict(POSITION_CODES)
+    disabled = set(db.scalars(select(DisabledSystemRole.code)).all())
+    roles = {code: name for code, name in POSITION_CODES.items() if code not in disabled}
     roles.update({role.code: role.name for role in db.scalars(select(CustomRole).order_by(CustomRole.name)).all()})
     return roles
 
@@ -94,7 +95,13 @@ def list_all_tags(db: Session) -> list[Tag]:
 
 def get_or_create_tag(db: Session, name: str) -> Tag:
     normalized = normalize_tag_name(name)
-    tag = db.scalar(select(Tag).where(func.lower(Tag.name) == normalized.lower()))
+    normalized_key = normalized.casefold()
+    # SQLite's lower() is ASCII-oriented and does not reliably fold Cyrillic.
+    # Compare in Python so an existing Unicode tag is reused instead of inserted.
+    tag = next(
+        (item for item in db.scalars(select(Tag)).all() if item.name.casefold() == normalized_key),
+        None,
+    )
     if tag is None:
         tag = Tag(name=normalized)
         db.add(tag)
@@ -116,7 +123,7 @@ def suggest_tag(db: Session, user: User, tag_name: str) -> TagSuggestion:
         msg = "Этот тег уже предложен и ожидает рассмотрения"
         raise ValueError(msg)
 
-    if any(tag.name.lower() == normalized.lower() for tag in user.tags):
+    if any(tag.name.casefold() == normalized.casefold() for tag in user.tags):
         msg = "У вас уже есть этот тег"
         raise ValueError(msg)
 

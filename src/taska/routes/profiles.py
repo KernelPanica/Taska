@@ -146,8 +146,10 @@ def admin_create_role(name: str = Form(...), user: User | None = Depends(get_cur
     try:
         create_custom_role(db, current, name)
     except ValueError as exc:
-        return RedirectResponse(f"/profiles?error={quote(str(exc))}", status_code=303)
-    return RedirectResponse("/profiles?success=Роль создана", status_code=303)
+        return RedirectResponse(
+            f"/admin/groups?error={quote(str(exc))}#roles", status_code=303
+        )
+    return RedirectResponse("/admin/groups#roles", status_code=303)
 
 
 @router.post("/profiles/{username}/suggest-tag")

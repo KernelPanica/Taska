@@ -46,3 +46,4 @@ class User(Base):
         back_populates="user", cascade="all, delete-orphan"
     )
     access_groups = relationship("AccessGroup", secondary="group_members", back_populates="members")
+    visible_tasks = relationship("Task", secondary="task_view_users", back_populates="view_users")

@@ -35,11 +35,9 @@
   </div>
   {% if user.is_admin %}
   <div class="card inner-card role-create-panel">
-    <h2>Кастомные роли</h2>
-    <form method="post" action="/admin/roles" class="form form-inline-row">
-      <input name="name" maxlength="128" placeholder="Например, Product Designer" required>
-      <button type="submit" class="btn btn-primary">Добавить роль</button>
-    </form>
+    <h2>Роли команды</h2>
+    <p class="muted">Системные и кастомные роли настраиваются в панели администратора.</p>
+    <a href="/admin/groups#roles" class="btn btn-ghost">Открыть роли и группы</a>
   </div>
   {% endif %}
 </section>

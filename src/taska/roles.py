@@ -13,3 +13,10 @@ POSITION_CODES = {
     "PM-M": "PM · Middle",
     "TL-S": "Team Lead · Senior",
 }
+
+ROLE_PRESETS = {
+    "software": {"name": "Разработка ПО", "codes": list(POSITION_CODES)},
+    "product": {"name": "Продуктовая команда", "codes": ["B-S", "B-M", "F-S", "F-M", "Q-S", "Q-M", "PM-S", "PM-M", "TL-S"]},
+    "small": {"name": "Небольшая команда", "codes": ["B-S", "F-S", "Q-S", "PM-S", "TL-S"]},
+    "empty": {"name": "Без предустановленных ролей", "codes": []},
+}

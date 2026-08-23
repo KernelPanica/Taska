@@ -12,6 +12,9 @@ group_members = Table("group_members", Base.metadata,
 task_view_groups = Table("task_view_groups", Base.metadata,
     Column("task_id", ForeignKey("tasks.id", ondelete="CASCADE"), primary_key=True),
     Column("group_id", ForeignKey("access_groups.id", ondelete="CASCADE"), primary_key=True))
+task_view_users = Table("task_view_users", Base.metadata,
+    Column("task_id", ForeignKey("tasks.id", ondelete="CASCADE"), primary_key=True),
+    Column("user_id", ForeignKey("users.id", ondelete="CASCADE"), primary_key=True))
 
 
 class AccessGroup(Base):
@@ -47,6 +50,8 @@ class DocumentNode(Base):
     name: Mapped[str] = mapped_column(String(256))
     path: Mapped[str] = mapped_column(String(1024))
     is_folder: Mapped[bool] = mapped_column(Boolean, default=False)
+    kind: Mapped[str] = mapped_column(String(32), default="doc")
+    content: Mapped[str] = mapped_column(Text, default="")
     external_url: Mapped[str] = mapped_column(String(2048), default="")
     storage = relationship("StorageConnection")
     permissions = relationship("DocumentPermission", cascade="all, delete-orphan")

@@ -5,6 +5,8 @@ from taska.auth.security import hash_password
 from taska.config import get_settings
 from taska.models.site_settings import SiteSettings
 from taska.models.user import User
+from taska.models.role import DisabledSystemRole
+from taska.roles import POSITION_CODES, ROLE_PRESETS
 
 
 def is_setup_required(db: Session) -> bool:
@@ -24,6 +26,7 @@ def complete_initial_setup(
     base_url: str,
     admin_username: str,
     admin_password: str,
+    role_preset: str = "software",
 ) -> User:
     if not is_setup_required(db):
         msg = "Первоначальная настройка уже выполнена"
@@ -52,6 +55,8 @@ def complete_initial_setup(
     )
     db.add(site)
     db.add(admin)
+    enabled_codes = set(ROLE_PRESETS.get(role_preset, ROLE_PRESETS["software"])["codes"])
+    db.add_all(DisabledSystemRole(code=code) for code in POSITION_CODES if code not in enabled_codes)
     db.commit()
     db.refresh(admin)
     return admin

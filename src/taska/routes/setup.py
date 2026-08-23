@@ -11,6 +11,7 @@ from taska.auth.security import create_setup_unlock_token, verify_setup_unlock_t
 from taska.config import get_settings
 from taska.database import get_db
 from taska.services.setup import complete_initial_setup, is_setup_required
+from taska.roles import ROLE_PRESETS
 
 router = APIRouter(tags=["setup"])
 templates = Jinja2Templates(directory=str(Path(__file__).resolve().parent.parent / "templates"))
@@ -43,6 +44,7 @@ def setup_page(
         {
             "error": unquote(error) if error else None,
             "defaults": get_settings(),
+            "role_presets": ROLE_PRESETS,
         },
     )
 
@@ -84,6 +86,7 @@ def setup_submit(
     admin_username: str = Form(...),
     admin_password: str = Form(...),
     admin_password_confirm: str = Form(...),
+    role_preset: str = Form("software"),
     db: Session = Depends(get_db),
 ) -> RedirectResponse:
     if not is_setup_required(db):
@@ -109,6 +112,7 @@ def setup_submit(
             base_url=base_url,
             admin_username=admin_username,
             admin_password=admin_password,
+            role_preset=role_preset,
         )
     except ValueError as exc:
         return RedirectResponse(f"/setup?error={quote(str(exc))}", status_code=303)
