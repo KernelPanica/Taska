@@ -1,0 +1,29 @@
+# Optional, independent stack. Never loaded by normal Taska startup.
+name: taska-mail
+services:
+  mail:
+    image: ghcr.io/docker-mailserver/docker-mailserver:16.0.1
+    hostname: ${TASKA_MAIL_HOSTNAME:?Set a public mail hostname}
+    environment:
+      SSL_TYPE: manual
+      SSL_CERT_PATH: /certs/fullchain.pem
+      SSL_KEY_PATH: /certs/privkey.pem
+      PERMIT_DOCKER: none
+      SPOOF_PROTECTION: '1'
+      ENABLE_CLAMAV: '0'
+      ENABLE_RSPAMD: '0'
+      ENABLE_OPENDKIM: '1'
+      ENABLE_OPENDMARC: '1'
+      ENABLE_POLICYD_SPF: '1'
+      POSTMASTER_ADDRESS: ${TASKA_MAIL_ADDRESS:?Set a sender address}
+    ports:
+      - '25:25'
+      - '587:587'
+    volumes:
+      - ./mail-data/mail:/var/mail
+      - ./mail-data/state:/var/mail-state
+      - ./mail-data/logs:/var/log/mail
+      - ./mail-data/config:/tmp/docker-mailserver
+      - ${TASKA_MAIL_CERT_DIR:?Set an absolute certificate directory}:/certs:ro
+    restart: unless-stopped
+    stop_grace_period: 1m

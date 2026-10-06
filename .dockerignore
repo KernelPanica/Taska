@@ -12,3 +12,13 @@ __pycache__
 .env.*
 AGENTS.md
 tests
+
+staticfiles
+.agents
+.codex
+.demo-credentials.json
+artifacts
+
+private-media
+mail-data
+.mail.env

@@ -1,56 +1,32 @@
-{% extends "base.html" %}
-{% block title %}Kanban — {{ project.name }}{% endblock %}
-{% block main_class %}kanban-main{% endblock %}
+{% extends 'base.html' %}{% load i18n static %}
+{% block title %}{{ project.name }}{% endblock %}
 {% block content %}
-<section class="kanban-page kanban-redesigned">
-  <header class="kanban-hero">
-    <div><p class="sp-breadcrumb"><a href="/projects">Пространства</a><span>/</span>{{ project.name }}</p><h1>Рабочая доска</h1><p class="muted">Перетаскивайте задачи между этапами и следите за потоком работы.</p></div>
-    <nav class="sp-view-nav"><span>Доска</span><a href="/projects/{{ project.id }}/sprints">Спринты</a></nav>
-  </header>
-  <div class="kanban-tools kanban-toolbar-panel">
-    <form method="get" class="kanban-filters">
-      <select name="sprint_id" aria-label="Спринт"><option value="">Все спринты</option>{% for sprint in project.sprints %}<option value="{{ sprint.id }}" {% if filter_sprint_id == sprint.id %}selected{% endif %}>{{ sprint.name }}</option>{% endfor %}</select>
-      <select name="assignee_id" aria-label="Исполнитель"><option value="">Все исполнители</option>{% for member in assignees %}<option value="{{ member.id }}" {% if filter_assignee_id == member.id %}selected{% endif %}>{{ member.display_name or member.username }}</option>{% endfor %}</select>
-      <select name="tag_id" aria-label="Тег"><option value="">Все теги</option>{% for tag in filter_tags %}<option value="{{ tag.id }}" {% if filter_tag_id == tag.id %}selected{% endif %}>{{ tag.name }}</option>{% endfor %}</select>
-      <select name="priority" aria-label="Приоритет"><option value="">Все приоритеты</option>{% for code,label in [('low','Низкий'),('medium','Средний'),('high','Высокий'),('critical','Критичный')] %}<option value="{{ code }}" {% if filter_priority == code %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
-      <button class="btn btn-primary" type="submit">Применить</button><a class="btn btn-ghost" href="/projects/{{ project.id }}/board">Сбросить</a>
-    </form>
-    {% if is_pm %}<form method="post" action="/projects/{{ project.id }}/statuses" class="kanban-status-form"><input name="name" maxlength="64" placeholder="Новый статус" aria-label="Название нового статуса" required><button class="btn btn-primary" type="submit">＋ Статус</button></form>{% endif %}
-  </div>
-  {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
-  {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
-  <div class="kanban-board" aria-label="Доска задач">
-    {% for code, label in statuses.items() %}
-    <section class="kanban-column" data-status="{{ code }}">
-      <header class="kanban-column-header"><div class="kanban-column-title"><span class="kanban-column-color status-color-{{ loop.index0 % 7 }}"></span><h2>{{ label }}</h2></div><span class="kanban-count">{{ columns.get(code, []) | length }}{% if wip_limits.get(code) %}/{{ wip_limits.get(code) }}{% endif %}</span></header>
-      <div class="kanban-cards">
-        {% for task in columns.get(code, []) %}
-        <article class="kanban-card" data-task-id="{{ task.id }}">
-          <div class="kanban-card-top"><span class="kanban-ticket-id">#{{ task.id }}</span>{% if is_pm %}<span class="kanban-drag-handle" draggable="true" role="button" tabindex="0" title="Перетащить задачу" aria-label="Перетащить задачу">⠿</span>{% endif %}</div>
-          <h3><a href="/projects/{{ project.id }}/tasks/{{ task.id }}">{{ task.title }}</a></h3>
-          {% if task.description %}<p class="kanban-card-description">{{ task.description | truncate(100) }}</p>{% endif %}
-          {% if task.required_tags %}<div class="kanban-card-tags">{% for tag in task.required_tags %}<span>{{ tag.name }}</span>{% endfor %}</div>{% endif %}
-          <div class="kanban-card-tags">{% if task.sprint %}<span>{{ task.sprint.name }}</span>{% endif %}{% if task.story_points %}<span>{{ task.story_points }} SP</span>{% endif %}<span>{{ {'low':'Низкий','medium':'Средний','high':'Высокий','critical':'Критичный'}.get(task.priority, task.priority) }}</span></div>
-          <footer>
-            <div class="kanban-card-meta"><span title="Комментарии">☰ {{ task.progress_updates | length }}</span>{% if task.due_date %}<time>◷ {{ task.due_date }}</time>{% endif %}</div>
-            {% if task.assignee %}<a class="kanban-assignee" href="/profiles/{{ task.assignee.username }}" title="{{ task.assignee.display_name or task.assignee.username }}">{% if task.assignee.avatar_data %}<img src="/avatars/{{ task.assignee.id }}" alt="">{% elif task.assignee.discord_avatar_url %}<img src="{{ task.assignee.discord_avatar_url }}" alt="">{% else %}{{ (task.assignee.display_name or task.assignee.username)[0] | upper }}{% endif %}</a>{% else %}<span class="kanban-unassigned" title="Не назначена">?</span>{% endif %}
-          </footer>
-          {% if is_pm %}
-          <form method="post" action="/projects/{{ project.id }}/tasks/{{ task.id }}/status" class="kanban-status-select">
-            <input type="hidden" name="return_to" value="board">
-            <input type="hidden" name="ajax" value="0">
-            <select name="status" aria-label="Изменить статус" onchange="this.form.submit()">
-              {% for target_code, target_label in statuses.items() %}<option value="{{ target_code }}" {% if target_code == task.status %}selected{% endif %}>{{ target_label }}</option>{% endfor %}
-            </select>
-          </form>
-          {% endif %}
-        </article>
-        {% else %}<div class="kanban-empty"><span>＋</span><p>Перетащите задачи сюда</p></div>{% endfor %}
-      </div>
-      {% if is_pm %}<a class="kanban-add-card" href="/projects/{{ project.id }}">＋ Добавить задачу</a>{% endif %}
-    </section>
-    {% endfor %}
-  </div>
-</section>
+<div class="breadcrumbs"><a href="{% url 'projects' %}">{% translate 'Projects' %}</a><span aria-hidden="true">/</span><span>{{ project.key }}</span></div>
+<div class="page-heading"><div><h1>{{ project.name }}</h1><p class="muted">{{ project.description }}</p></div>{% if can_edit %}<a class="button primary" href="{% url 'issue-create' project.key %}"><svg class="icon" aria-hidden="true"><use href="#icon-plus"/></svg>{% translate 'Create issue' %}</a>{% endif %}</div>
+<div class="board-toolbar"><div class="view-tab"><svg class="icon" aria-hidden="true"><use href="#icon-boards"/></svg>{% if board %}{% translate board.name %}{% else %}{% translate 'Board' %}{% endif %}</div>{% if can_edit %}<a class="text-button" href="{% url 'issue-types' project.key %}">{% translate 'Issue types' %}</a><a class="text-button" href="{% url 'project-statuses' project.key %}">{% translate 'Add or delete columns' %}</a><a class="text-button" href="{% url 'project-team' project.key %}">{% translate 'Team' %}</a>{% endif %}</div>
+<p id="board-feedback" role="status" aria-live="polite"></p>
+{% if filtered %}<a class="text-button" href="{% url 'project-board' project.key %}">{% translate 'Clear filters' %}</a>{% endif %}
+<div class="board" role="region" aria-label="{% translate 'Project board' %}" tabindex="0" data-review-message="{% translate 'Open the task and submit progress for review.' %}" data-action="{% url 'board-action' project.key %}" data-manager="{{ can_edit|yesno:'yes,no' }}" data-version="{{ project.version }}" data-error="{% translate 'Could not save. Reload the page and try again.' %}" data-confirm="{% translate 'Confirm the review decision.' %}">
+{% for status in statuses %}<section class="board-column category-{{ status.category }}" aria-labelledby="column-{{ status.pk }}" data-status="{{ status.pk }}" data-review="{{ status.is_review|yesno:'yes,no' }}">
+<header class="column-header"><span class="status-dot" aria-hidden="true"></span><h2 id="column-{{ status.pk }}">{% translate status.name %}</h2><span class="count">{{ status.issues.count }}</span></header>
+<p class="column-category">{{ status.get_category_display }}</p>
+{% if can_edit %}<details class="column-rename"><summary>{% translate 'Rename column' %}</summary><form method="post" action="{% url 'board-action' project.key %}">{% csrf_token %}<input type="hidden" name="action" value="rename"><input type="hidden" name="board_version" value="{{ project.version }}"><input type="hidden" name="status" value="{{ status.pk }}"><label>{% translate 'Name' %}<input name="name" value="{{ status.name }}" maxlength="80" required></label><button class="button tonal">{% translate 'Save' %}</button></form><a class="text-button" href="{% url 'project-statuses' project.key %}#status-{{ status.pk }}">{% translate 'Delete column' %}</a></details>{% endif %}
+<div class="column-content">{% for issue in status.issues.all %}
+<article class="issue-card" data-issue="{{ issue.pk }}" data-version="{{ issue.version }}" data-url="{% url 'issue-detail' project.key issue.number %}" draggable="{{ issue.can_move|yesno:'true,false' }}">
+<span class="issue-reference"><span class="type-color" style="--issue-type-color: {{ issue.issue_type.color }}" aria-hidden="true"></span><svg class="icon" aria-hidden="true"><use href="#icon-{{ issue.issue_type.icon }}"/></svg><span class="mono">{{ issue.reference }}</span><span class="issue-type">{% translate issue.issue_type.name %}</span></span>
+<h3><a href="{% url 'issue-detail' project.key issue.number %}">{{ issue.title }}</a></h3>
+<div class="chip-row">{% for tag in issue.tags.all %}<a class="chip" href="{% querystring tag=tag.pk %}">{{ tag.name }}</a>{% endfor %}</div>
+<p class="small">{% for person in issue.assignees.all %}<a href="{% querystring assignee=person.pk %}">{{ person.get_full_name|default:person.username }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+<p class="small muted card-metadata">{{ issue.get_priority_display }}{% if issue.due_date %} · <time datetime="{{ issue.due_date|date:'Y-m-d' }}">{{ issue.due_date|date:'DATE_FORMAT' }}</time>{% endif %}{% if issue.overdue %}<strong class="overdue">{% translate 'Overdue' %}</strong>{% endif %}</p>
+{% if issue.can_move %}<details class="card-controls"><summary>{% translate 'Move task' %}</summary>
+<form method="post" action="{% url 'board-action' project.key %}">{% csrf_token %}<input type="hidden" name="issue" value="{{ issue.pk }}"><input type="hidden" name="version" value="{{ issue.version }}"><input type="hidden" name="board_version" value="{{ project.version }}">
+<label>{% translate 'Status' %}<select name="status" aria-label="{% translate 'Status' %}">{% for target in issue.move_targets %}<option value="{{ target.pk }}" {% if target.pk == status.pk %}selected{% endif %}>{% translate target.name %}</option>{% endfor %}</select></label>
+
+<button class="button tonal">{% translate 'Move task' %}</button></form>
+<form method="post" action="{% url 'board-action' project.key %}">{% csrf_token %}<input type="hidden" name="issue" value="{{ issue.pk }}"><input type="hidden" name="version" value="{{ issue.version }}"><input type="hidden" name="board_version" value="{{ project.version }}"><input type="hidden" name="status" value="{{ status.pk }}"><button class="text-button" name="direction" value="up">{% translate 'Move up' %}</button><button class="text-button" name="direction" value="down">{% translate 'Move down' %}</button></form>
+</details>{% endif %}</article>
+{% empty %}<div class="column-empty"><p>{% translate 'No issues in this status' %}</p></div>{% endfor %}</div></section>{% endfor %}
+</div>
+<p class="board-note">{% translate 'Open a task to update progress or review submitted work.' %}</p>
+<script src="{% static 'js/board.js' %}" defer></script>
 {% endblock %}
-{% block scripts %}<script src="/static/js/kanban.js" defer></script>{% endblock %}

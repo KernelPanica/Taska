@@ -1,28 +1,21 @@
 services:
   taska:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     env_file:
       - ${TASKA_ENV_FILE_SOURCE:-.env}
     environment:
-      TASKA_ENV_FILE: /data/taska.env
-      TASKA_DATABASE_URL: sqlite:////data/taska.db
+      TASKA_DATABASE_PATH: /data/django.sqlite3
+      TASKA_MEDIA_ROOT: /data/uploads
     ports:
       - "${TASKA_PORT:-8000}:8000"
     volumes:
       - taska-data:/data
     restart: unless-stopped
     healthcheck:
-      test:
-        - CMD
-        - python
-        - -c
-        - "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 10s
       timeout: 3s
       retries: 5
       start_period: 10s
-
 volumes:
   taska-data:

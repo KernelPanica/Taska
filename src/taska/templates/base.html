@@ -1,106 +1,51 @@
-<!DOCTYPE html>
-<html lang="ru" data-theme="dark">
+{% load static i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+<!doctype html>
+<html lang="{{ LANGUAGE_CODE }}" data-theme="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}{{ site.app_name if site is defined else 'Taska' }}{% endblock %}</title>
-  <link rel="icon" href="/static/favicon.ico" sizes="any">
-  <script>
-    window.TASKA_SERVER_PREFS = {% if user %}JSON.parse({{ (user.ui_preferences or '{}') | tojson }}){% else %}{}{% endif %};
-    const prefs = {...window.TASKA_SERVER_PREFS, ...JSON.parse(localStorage.getItem('taska-ui') || '{}')};
-    document.documentElement.dataset.theme = prefs.theme || localStorage.getItem('taska-theme') || 'dark';
-    document.documentElement.dataset.density = prefs.density || 'comfortable';
-    document.documentElement.dataset.motion = prefs.motion || 'full';
-    if (prefs.accent) document.documentElement.style.setProperty('--primary', prefs.accent);
-    if (prefs.font_scale) document.documentElement.style.setProperty('--font-scale', prefs.font_scale);
-  </script>
-  <link rel="stylesheet" href="/static/css/style.css?v=20260823-mono-signal">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>{% block title %}Taska{% endblock %} · Taska</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
-  <div class="page-loader" aria-hidden="true"><span class="page-loader-mark">T</span><span class="page-loader-bar"></span></div>
-  <header class="header">
-    <div class="container header-inner">
-      <div class="header-start">
-        {% if user %}
-          <div class="dropdown" data-dropdown>
-            <button class="icon-button menu-button" type="button" aria-label="Открыть доступные страницы" aria-expanded="false" data-dropdown-toggle>
-              <span></span><span></span><span></span>
-            </button>
-            <div class="dropdown-panel nav-menu" data-dropdown-panel hidden>
-              <p class="dropdown-title">Доступные страницы</p>
-              <a href="/"><span>⌂</span> Дашборд</a>
-              <a href="/projects"><span>▦</span> Пространства</a>
-              <a href="/docs"><span>▤</span> Документация</a>
-              <a href="/profiles"><span>◉</span> Команда</a>
-              <a href="/notifications"><span>♢</span> Уведомления</a>
-              <a href="/account"><span>●</span> Мой профиль</a>
-              {% if user.is_admin %}
-                <div class="dropdown-separator"></div>
-                <p class="dropdown-title">Администрирование</p>
-                <a href="/admin"><span>⚙</span> Панель</a>
-                <a href="/admin/invitations"><span>＋</span> Приглашения</a>
-                <a href="/admin/settings"><span>◆</span> Настройки</a>
-                <a href="/admin/groups"><span>◎</span> Роли и группы</a>
-              {% endif %}
-              <div class="dropdown-separator"></div>
-              <label class="theme-control">
-                <span>Тема</span>
-                <select data-theme-select aria-label="Тема интерфейса">
-                  <option value="light">Светлая</option>
-                  <option value="dark">Тёмная</option>
-                  <option value="xp">Windows XP</option>
-                  <option value="custom">Своя тема</option>
-                </select>
-              </label>
-            </div>
-          </div>
-        {% endif %}
-        <a href="/" class="logo"><span class="logo-mark">T</span><span>{{ site.app_name if site is defined else 'Taska' }}</span></a>
+  <svg xmlns="http://www.w3.org/2000/svg" class="icon-definitions" aria-hidden="true"><defs>
+    <symbol id="icon-work" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="5"/><path d="m8 12 3 3 5-6"/></symbol>
+    <symbol id="icon-projects" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></symbol>
+    <symbol id="icon-boards" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16m6-16v16"/></symbol>
+    <symbol id="icon-roadmap" viewBox="0 0 24 24"><path d="M5 4v16m0-12h10m-10 8h14m-4-11v6m4 2v6"/></symbol>
+    <symbol id="icon-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></symbol>
+    <symbol id="icon-issue" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M9 8h6m-6 4h6m-6 4h3"/></symbol>
+    <symbol id="icon-bug" viewBox="0 0 24 24"><rect x="7" y="5" width="10" height="15" rx="5"/><path d="M9 5 7 2m8 3 2-3M3 9h4m10 0h4M3 15h4m10 0h4m-9-9v14"/></symbol>
+    <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  </defs></svg>
+  <a class="skip-link" href="#main">{% translate 'Skip to content' %}</a>
+  <aside class="sidebar">
+    <a class="brand" href="{% url 'projects' %}" aria-label="Taska"><span class="brand-mark">t</span><span class="nav-label">Taska</span></a>
+    <div class="workspace-label nav-label">{% if project %}{{ project.name }}<span class="muted">{{ project.key }}</span>{% else %}{% translate 'Your workspace' %}{% endif %}</div>
+    <nav class="primary-nav" aria-label="{% translate 'Main navigation' %}">
+      <a href="{% url 'todos' %}" title="{% translate 'My tasks' %}" {% if request.resolver_match.url_name == 'todos' %}aria-current="page"{% endif %}><svg class="icon" aria-hidden="true"><use href="#icon-work"/></svg><span class="nav-label">{% translate 'My tasks' %}</span></a>
+      <a href="{% url 'projects' %}" title="{% translate 'Projects' %}" {% if request.resolver_match.url_name == 'projects' or project %}aria-current="page"{% endif %}><svg class="icon" aria-hidden="true"><use href="#icon-projects"/></svg><span class="nav-label">{% translate 'Projects' %}</span></a>
+      <a href="{% url 'notifications' %}" {% if request.resolver_match.url_name == 'notifications' %}aria-current="page"{% endif %} title="{% translate 'Notifications' %}"><svg class="icon" aria-hidden="true"><use href="#icon-work"/></svg><span class="nav-label">{% translate 'Notifications' %}</span></a>
+    </nav>
+    {% if user.is_authenticated %}
+    <div class="project-navigation nav-label"><p class="eyebrow">{% translate 'Your projects' %}</p>{% for item in navigation_projects %}<a href="{% url 'project-board' item.key %}" {% if project.pk == item.pk %}aria-current="page"{% endif %}><span class="project-initial">{{ item.name|first }}</span><span>{{ item.name }}</span></a>{% empty %}<p class="muted small">{% translate 'No projects yet' %}</p>{% endfor %}</div>
+    {% endif %}
+    <div class="sidebar-bottom"><span class="version nav-label">Taska</span>{% if user.is_staff %}<a class="admin-link" href="{% url 'admin:index' %}" title="{% translate 'Administration' %}"><svg class="icon" aria-hidden="true"><use href="#icon-settings"/></svg><span class="nav-label">{% translate 'Administration' %}</span></a>{% endif %}</div>
+  </aside>
+  <div class="app-shell">
+    <header class="topbar">
+      <span class="topbar-context">{% if project %}{{ project.name }}{% else %}{% translate 'Your workspace' %}{% endif %}</span>
+      <div class="topbar-actions">
+        <form class="language-switcher" action="{% url 'set_language' %}" method="post" aria-label="{% translate 'Language' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button name="language" value="en" lang="en" aria-pressed="{% if LANGUAGE_CODE == 'en' %}true{% else %}false{% endif %}">EN</button><button name="language" value="ru" lang="ru" aria-pressed="{% if LANGUAGE_CODE == 'ru' %}true{% else %}false{% endif %}">RU</button></form>
+        {% if user.is_staff %}<a class="button text-button mobile-admin" href="{% url 'admin:index' %}" title="{% translate 'Administration' %}" aria-label="{% translate 'Administration' %}"><svg class="icon" aria-hidden="true"><use href="#icon-settings"/></svg></a>{% endif %}
+        {% if user.is_authenticated %}<a class="avatar" href="{% url 'profile' %}" title="{% translate 'My profile' %}" aria-label="{% translate 'My profile' %}"><img src="{% url 'person-avatar' user.pk %}" alt="" width="36" height="36"></a><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="text-button">{% translate 'Sign out' %}</button></form>{% else %}<a class="button tonal" href="{% url 'login' %}">{% translate 'Sign in' %}</a>{% endif %}
       </div>
-      <nav class="header-actions" aria-label="Пользовательские действия">
-        {% if user %}
-
-          <button type="button" class="icon-button quick-open-button" aria-label="Быстрый переход" title="Быстрый переход" data-command-open>⌕</button>
-
-          <a href="/notifications" class="icon-button notification-button" aria-label="Уведомления">
-            <span class="bell-icon" aria-hidden="true"></span>
-            <span class="notification-badge" data-notification-count hidden></span>
-          </a>
-
-          <div class="dropdown" data-dropdown>
-            <button class="icon-button avatar-button" type="button" aria-label="Профиль {{ user.username }}" aria-expanded="false" data-dropdown-toggle>
-              {% if user.avatar_data %}<img src="/avatars/{{ user.id }}" alt="">
-              {% elif user.discord_avatar_url %}<img src="{{ user.discord_avatar_url }}" alt="">
-              {% else %}{{ (user.display_name or user.username)[0] | upper }}{% endif %}
-            </button>
-            <div class="dropdown-panel profile-menu" data-dropdown-panel hidden>
-              <div class="profile-menu-head">
-                {% if user.avatar_data %}<img src="/avatars/{{ user.id }}" class="avatar-large" alt="">
-                {% elif user.discord_avatar_url %}<img src="{{ user.discord_avatar_url }}" class="avatar-large" alt="">
-                {% else %}<span class="avatar-large">{{ (user.display_name or user.username)[0] | upper }}</span>{% endif %}
-                <span class="profile-menu-identity"><strong title="{{ user.display_name or user.username }}">{{ user.display_name or user.username }}</strong><small>@{{ user.username }}</small></span>
-              </div>
-              <a href="/account">Настройки профиля</a>
-              <form action="/logout" method="post">
-                <button type="submit" class="dropdown-action">Выйти</button>
-              </form>
-            </div>
-          </div>
-
-        {% else %}
-          <a href="/login" class="icon-button avatar-button" aria-label="Войти">→</a>
-        {% endif %}
-      </nav>
-    </div>
-  </header>
-
-  <main class="container main {% block main_class %}{% endblock %}">
-    {% block content %}{% endblock %}
-  </main>
-  {% if user %}<div class="command-overlay" data-command-overlay hidden><section class="command-palette" role="dialog" aria-modal="true" aria-label="Быстрый переход"><div class="command-input-wrap"><span>⌕</span><input type="search" placeholder="Перейти к разделу…" data-command-input autocomplete="off"></div><div class="command-results" data-command-results><a href="/">Дашборд <small>Главная</small></a><a href="/projects">Проекты <small>Задачи и доски</small></a><a href="/profiles">Команда <small>Профили участников</small></a><a href="/notifications">Уведомления <small>События</small></a><a href="/account">Мой профиль <small>Настройки и тема</small></a>{% if user.is_admin %}<a href="/admin">Администрирование <small>Управление</small></a><a href="/admin/settings">Настройки системы <small>Окружение</small></a>{% endif %}</div></section></div>{% endif %}
-  <div class="toast-region" aria-live="polite" data-toast-region></div>
-  <script src="/static/js/theme.js" defer></script>
-  <script>document.addEventListener('DOMContentLoaded',()=>document.body.classList.add('page-ready'));</script>
-  {% block scripts %}{% endblock %}
+    </header>
+    <main id="main">{% for message in messages %}<p class="panel" role="status">{{ message }}</p>{% endfor %}{% block content %}{% endblock %}</main>
+    <footer><span>Taska</span></footer>
+  </div>
 </body>
 </html>

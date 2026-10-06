@@ -1,0 +1,3 @@
+{% extends user.is_authenticated|yesno:"base.html,public.html" %}{% load i18n %}
+{% block title %}{% translate 'Permission required' %}{% endblock %}
+{% block content %}<section class="panel empty narrow"><h1>{% translate 'Permission required' %}</h1><p>{% translate 'Ask an administrator for access, or sign in with an authorized account.' %}</p>{% if user.is_authenticated %}<a class="button tonal" href="{% url 'projects' %}">{% translate 'Back to projects' %}</a>{% else %}<a href="{% url 'login' %}">{% translate 'Sign in' %}</a>{% endif %}</section>{% endblock %}

@@ -1,0 +1,2 @@
+{% extends 'public.html' %}{% load i18n %}
+{% block content %}<h1>{% translate 'Sign in to Taska' %}</h1><form method="post">{% csrf_token %}{{ form.as_p }}<input type="hidden" name="next" value="{{ next }}"><button class="primary">{% translate 'Sign in' %}</button></form><p class="muted">{% translate 'An invitation is required to join.' %}</p>{% endblock %}

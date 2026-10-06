@@ -1,41 +1,10 @@
-{% extends "base.html" %}
-
-{% block title %}Пространства — {{ site.app_name }}{% endblock %}
-
+{% extends 'base.html' %}{% load i18n %}
+{% block title %}{% translate 'Projects' %}{% endblock %}
 {% block content %}
-<section>
-  <div class="section-header">
-    <div>
-      <h1>Пространства</h1>
-      <p class="muted">Все проекты команды и их задачи.</p>
-    </div>
-  </div>
+<div class="page-heading"><div><p class="eyebrow">{% translate 'Team space' %}</p><h1>{% translate 'Projects' %}</h1></div>{% if user.is_superuser %}<a class="button primary" href="{% url 'admin:projects_project_add' %}"><svg class="icon" aria-hidden="true"><use href="#icon-plus"/></svg>{% translate 'Create project' %}</a>{% endif %}</div>
+<div class="project-grid">
+{% for project in projects %}<a class="project-card" href="{% url 'project-board' project.key %}"><div class="section-heading"><span class="project-initial large">{{ project.name|first }}</span><span class="mono muted">{{ project.key }}</span></div><h2>{{ project.name }}</h2><p class="muted">{{ project.description|default_if_none:'' }}</p><div class="card-footer"><span>{% translate 'Issues' %}: {{ project.issue_count }}</span><span class="open-link">{% translate 'Open board' %}<svg class="icon" aria-hidden="true"><use href="#icon-arrow"/></svg></span></div></a>
+{% empty %}<section class="panel empty"><svg class="icon empty-icon" aria-hidden="true"><use href="#icon-projects"/></svg><h2>{% translate 'No projects yet' %}</h2><p>{% translate 'Ask an administrator to invite you to a project.' %}</p><a class="button tonal" href="{% url 'todos' %}">{% translate 'Open my tasks' %}</a></section>{% endfor %}
+</div>
 
-  {% if is_pm %}
-    <form method="post" action="/projects" class="card form create-form">
-      <h2>Новый проект</h2>
-      <label>
-        Название
-        <input type="text" name="name" required>
-      </label>
-      <label>
-        Описание
-        <textarea name="description" rows="3" placeholder="Кратко о проекте"></textarea>
-      </label>
-      <button type="submit" class="btn btn-primary">Создать проект</button>
-    </form>
-  {% endif %}
-
-  <div class="profiles-grid">
-    {% for project in projects %}
-      <a href="/projects/{{ project.id }}" class="profile-card">
-        <h2>{{ project.name }}</h2>
-        <p class="muted">{{ project.description or "Без описания" }}</p>
-        <p class="muted">Задач: {{ project.tasks|length }}</p>
-      </a>
-    {% else %}
-      <p class="muted">Проектов пока нет.</p>
-    {% endfor %}
-  </div>
-</section>
 {% endblock %}

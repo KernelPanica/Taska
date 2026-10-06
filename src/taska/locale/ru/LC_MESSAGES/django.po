@@ -1,0 +1,1154 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Taska\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-09-30 14:44+0000\n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+#: src/taska/projects/board_views.py:56
+#: src/taska/templates/projects/board.html:9
+msgid "Open the task and submit progress for review."
+msgstr "Откройте задачу и отправьте результат работы на проверку."
+
+#: src/taska/projects/board_views.py:74
+#: src/taska/projects/relation_views.py:103
+#: src/taska/projects/relation_views.py:108 src/taska/projects/team_views.py:74
+#: src/taska/projects/team_views.py:362
+msgid "Choose a valid item."
+msgstr "Выберите допустимый элемент."
+
+#: src/taska/projects/board_views.py:84
+msgid "The board changed. Reload the page and try again."
+msgstr "Доска изменилась. Обновите страницу и повторите попытку."
+
+#: src/taska/projects/forms.py:15 src/taska/templates/projects/issue.html:33
+msgid "Tags"
+msgstr "Теги"
+
+#: src/taska/projects/forms.py:18
+msgid "Separate tags with commas. Up to 20 tags, 40 characters each."
+msgstr "Разделяйте теги запятыми. Не более 20 тегов по 40 символов."
+
+#: src/taska/projects/forms.py:36
+msgid "Issue type"
+msgstr "Тип задачи"
+
+#: src/taska/projects/forms.py:36 src/taska/templates/projects/board.html:23
+msgid "Status"
+msgstr "Статус"
+
+#: src/taska/projects/forms.py:65
+msgid "Keep the description under 50,000 characters."
+msgstr "Описание должно содержать не более 50 000 символов."
+
+#: src/taska/projects/forms.py:75
+msgid "Ask an administrator to configure a queue status first."
+msgstr "Попросите администратора настроить статус категории «Очередь»."
+
+#: src/taska/projects/forms.py:82
+msgid "Create an issue type first."
+msgstr "Сначала создайте тип задачи."
+
+#: src/taska/projects/forms.py:95
+msgid "Use at most 20 tags, with at most 40 characters each."
+msgstr "Укажите не более 20 тегов, каждый длиной до 40 символов."
+
+#: src/taska/projects/forms.py:117 src/taska/projects/models.py:198
+msgid "Choose a value from this project."
+msgstr "Выберите значение из этого проекта."
+
+#: src/taska/projects/forms.py:164
+msgid "Color"
+msgstr "Цвет"
+
+#: src/taska/projects/forms.py:164
+msgid "Icon"
+msgstr "Значок"
+
+#: src/taska/projects/management/commands/seed_demo.py:80
+msgid "Team board"
+msgstr "Доска команды"
+
+#: src/taska/projects/management/commands/seed_demo.py:84
+msgid "To do"
+msgstr "К выполнению"
+
+#: src/taska/projects/management/commands/seed_demo.py:85
+msgid "In progress"
+msgstr "В работе"
+
+#: src/taska/projects/management/commands/seed_demo.py:86
+#: src/taska/projects/models.py:65
+msgid "Done"
+msgstr "Готово"
+
+#: src/taska/projects/management/commands/seed_demo.py:101
+msgid "In review"
+msgstr "На проверке"
+
+#: src/taska/projects/management/commands/seed_demo.py:107
+#: src/taska/projects/models.py:13 src/taska/projects/models.py:101
+msgid "Bug"
+msgstr "Ошибка"
+
+#: src/taska/projects/management/commands/seed_demo.py:128
+#: src/taska/projects/models.py:12
+#: src/taska/templates/projects/relations.html:7
+msgid "Task"
+msgstr "Задача"
+
+#: src/taska/projects/management/commands/send_notifications.py:94
+msgid "Invitation to Taska"
+msgstr "Приглашение в Taska"
+
+#: src/taska/projects/middleware.py:16
+msgid "Check your request and try again."
+msgstr "Проверьте запрос и повторите попытку."
+
+#: src/taska/projects/middleware.py:17
+msgid "Sign in to continue."
+msgstr "Войдите, чтобы продолжить."
+
+#: src/taska/projects/middleware.py:18
+msgid "You do not have permission to perform this action."
+msgstr "У вас нет прав для этого действия."
+
+#: src/taska/projects/middleware.py:19
+msgid "This item is unavailable or you do not have access."
+msgstr "Объект недоступен или у вас нет прав на его просмотр."
+
+#: src/taska/projects/middleware.py:20
+msgid "This endpoint only supports GET requests."
+msgstr "Этот адрес поддерживает только GET-запросы."
+
+#: src/taska/projects/middleware.py:23
+msgid "Something went wrong. Please try again."
+msgstr "Произошла ошибка. Повторите попытку."
+
+#: src/taska/projects/models.py:14
+msgid "Request"
+msgstr "Запрос"
+
+#: src/taska/projects/models.py:15
+msgid "Story"
+msgstr "История"
+
+#: src/taska/projects/models.py:16
+msgid "Epic"
+msgstr "Эпик"
+
+#: src/taska/projects/models.py:22
+msgid "Key"
+msgstr "Ключ"
+
+#: src/taska/projects/models.py:28
+msgid "Use 2–12 uppercase letters or digits, starting with a letter."
+msgstr "Используйте 2–12 заглавных латинских букв или цифр, начиная с буквы."
+
+#: src/taska/projects/models.py:32 src/taska/projects/models.py:68
+#: src/taska/projects/models.py:96 src/taska/projects/models.py:122
+#: src/taska/templates/projects/board.html:13
+msgid "Name"
+msgstr "Название"
+
+#: src/taska/projects/models.py:33 src/taska/projects/models.py:158
+msgid "Description"
+msgstr "Описание"
+
+#: src/taska/projects/models.py:47 src/taska/templates/projects/team.html:2
+msgid "Project manager"
+msgstr "Менеджер проекта"
+
+#: src/taska/projects/models.py:48 src/taska/projects/models.py:299
+#: src/taska/projects/team_forms.py:96 src/taska/templates/projects/team.html:2
+msgid "Member"
+msgstr "Участник"
+
+#: src/taska/projects/models.py:49 src/taska/projects/models.py:299
+#: src/taska/projects/team_forms.py:96 src/taska/templates/projects/team.html:2
+msgid "Observer"
+msgstr "Наблюдатель"
+
+#: src/taska/projects/models.py:63
+msgid "Queue"
+msgstr "Очередь"
+
+#: src/taska/projects/models.py:64 src/taska/templates/projects/my_tasks.html:3
+msgid "Active"
+msgstr "Активные"
+
+#: src/taska/projects/models.py:69
+msgid "Category"
+msgstr "Категория"
+
+#: src/taska/projects/models.py:91
+msgid "A status in use cannot move to another project."
+msgstr "Нельзя перенести используемый статус в другой проект."
+
+#: src/taska/projects/models.py:101
+msgid "Issue"
+msgstr "Задача"
+
+#: src/taska/projects/models.py:116
+msgid "An issue type in use cannot move to another project."
+msgstr "Нельзя перенести используемый тип задач в другой проект."
+
+#: src/taska/projects/models.py:150
+msgid "Low"
+msgstr "Низкий"
+
+#: src/taska/projects/models.py:151
+msgid "Normal"
+msgstr "Обычный"
+
+#: src/taska/projects/models.py:152
+msgid "High"
+msgstr "Высокий"
+
+#: src/taska/projects/models.py:153
+msgid "Urgent"
+msgstr "Срочный"
+
+#: src/taska/projects/models.py:157
+msgid "Title"
+msgstr "Название"
+
+#: src/taska/projects/models.py:162 src/taska/templates/projects/issue.html:32
+msgid "Estimate"
+msgstr "Оценка сложности"
+
+#: src/taska/projects/models.py:164 src/taska/templates/projects/issue.html:32
+msgid "Priority"
+msgstr "Приоритет"
+
+#: src/taska/projects/models.py:166 src/taska/templates/projects/issue.html:32
+msgid "Start date"
+msgstr "Дата начала"
+
+#: src/taska/projects/models.py:167 src/taska/templates/projects/issue.html:32
+msgid "Due date"
+msgstr "Срок выполнения"
+
+#: src/taska/projects/models.py:200
+msgid "The due date cannot be earlier than the start date."
+msgstr "Срок выполнения не может быть раньше даты начала."
+
+#: src/taska/projects/models.py:215
+msgid "This issue number has already been allocated."
+msgstr "Этот номер задачи уже использовался."
+
+#: src/taska/projects/models.py:253 src/taska/projects/models.py:280
+msgid "Approved"
+msgstr "Одобрено"
+
+#: src/taska/projects/models.py:253
+msgid "Returned"
+msgstr "Возвращено на доработку"
+
+#: src/taska/projects/models.py:279
+msgid "Pending"
+msgstr "Ожидает решения"
+
+#: src/taska/projects/models.py:281
+msgid "Rejected"
+msgstr "Отклонено"
+
+#: src/taska/projects/models.py:353 src/taska/projects/relation_views.py:16
+msgid "Related task"
+msgstr "Связанная задача"
+
+#: src/taska/projects/models.py:354 src/taska/projects/relation_views.py:17
+msgid "Blocks"
+msgstr "Блокирует"
+
+#: src/taska/projects/models.py:355 src/taska/projects/relation_views.py:19
+msgid "Parent of"
+msgstr "Родитель задачи"
+
+#: src/taska/projects/models.py:378
+msgid "A task cannot link to itself."
+msgstr "Задача не может ссылаться на саму себя."
+
+#: src/taska/projects/models.py:383
+msgid "These tasks are already linked. Edit the existing relation."
+msgstr "Эти задачи уже связаны. Измените существующую связь."
+
+#: src/taska/projects/models.py:386
+msgid "This task already has a parent."
+msgstr "У этой задачи уже есть родитель."
+
+#: src/taska/projects/models.py:395
+msgid "This relation would create a hierarchy cycle."
+msgstr "Эта связь создаст цикл вложенности задач."
+
+#: src/taska/projects/relation_views.py:18
+msgid "Blocked by"
+msgstr "Заблокирована задачей"
+
+#: src/taska/projects/relation_views.py:20
+msgid "Child of"
+msgstr "Дочерняя задача для"
+
+#: src/taska/projects/relation_views.py:119
+msgid "This relation changed. Reload the task and try again."
+msgstr "Связь изменилась. Обновите задачу и повторите попытку."
+
+#: src/taska/projects/team_forms.py:21
+#: src/taska/templates/projects/issue.html:35
+msgid "Assignees"
+msgstr "Исполнители"
+
+#: src/taska/projects/team_forms.py:22
+#: src/taska/templates/projects/issue.html:35
+msgid "Customers"
+msgstr "Заказчики"
+
+#: src/taska/projects/team_forms.py:23
+#: src/taska/templates/projects/issue.html:35
+msgid "Watchers"
+msgstr "Наблюдатели"
+
+#: src/taska/projects/team_forms.py:59
+msgid "Progress, links and reports"
+msgstr "Результаты работы, ссылки и отчёты"
+
+#: src/taska/projects/team_forms.py:68
+#: src/taska/templates/projects/issue.html:30
+msgid "Comment"
+msgstr "Комментарий"
+
+#: src/taska/projects/team_forms.py:79
+#: src/taska/templates/projects/statuses.html:10
+msgid "Review status"
+msgstr "Статус проверки"
+
+#: src/taska/projects/team_forms.py:82
+msgid ""
+"Reports submitted by assignees arrive in this column. A PM accepts the "
+"result or returns it to work. Only one active column can have this role."
+msgstr ""
+"В эту колонку попадают результаты, отправленные исполнителями на проверку. "
+"PM принимает работу или возвращает её на доработку. Такая роль может быть "
+"только у одной колонки категории «Активный»."
+
+#: src/taska/projects/team_forms.py:89
+msgid "The review status must be active."
+msgstr "Статус проверки должен относиться к активной категории."
+
+#: src/taska/projects/team_forms.py:94
+msgid "Email"
+msgstr "Электронная почта"
+
+#: src/taska/projects/team_forms.py:96 src/taska/templates/projects/team.html:2
+msgid "Role"
+msgstr "Роль"
+
+#: src/taska/projects/team_forms.py:108
+msgid "About me"
+msgstr "О себе"
+
+#: src/taska/projects/team_forms.py:114
+msgid "Avatar"
+msgstr "Аватарка"
+
+#: src/taska/projects/team_forms.py:116
+msgid "PNG, JPEG or WebP, up to 4 MiB."
+msgstr "PNG, JPEG или WebP, до 4 МиБ."
+
+#: src/taska/projects/team_forms.py:119
+msgid "Remove avatar"
+msgstr "Удалить аватарку"
+
+#: src/taska/projects/team_forms.py:130 src/taska/projects/team_forms.py:146
+msgid "Choose an image up to 4 MiB and 16 megapixels."
+msgstr "Выберите изображение до 4 МиБ и 16 мегапикселей."
+
+#: src/taska/projects/team_forms.py:161
+msgid "This email is already in use."
+msgstr "Этот адрес электронной почты уже используется."
+
+#: src/taska/projects/team_views.py:100
+msgid "Reload the task and try again."
+msgstr "Обновите страницу задачи и повторите попытку."
+
+#: src/taska/projects/team_views.py:144
+msgid "This person is no longer an active project member."
+msgstr "Этот пользователь больше не является активным участником проекта."
+
+#: src/taska/projects/team_views.py:164
+msgid "Add progress text or at least one file."
+msgstr "Добавьте описание результата или хотя бы один файл."
+
+#: src/taska/projects/team_views.py:170
+msgid "The upload exceeds the configured file or submission limit."
+msgstr "Превышен допустимый размер файла или всех файлов отчёта."
+
+#: src/taska/projects/team_views.py:174
+msgid "Ask a project manager to configure a review status."
+msgstr "Попросите менеджера проекта настроить статус проверки."
+
+#: src/taska/projects/team_views.py:227
+msgid "Unknown action."
+msgstr "Неизвестное действие."
+
+#: src/taska/projects/team_views.py:233
+msgid "This task changed. Reload before trying again."
+msgstr "Задача изменилась. Обновите страницу и повторите попытку."
+
+#: src/taska/projects/team_views.py:304
+msgid "Profile saved."
+msgstr "Профиль сохранён."
+
+#: src/taska/projects/team_views.py:376 src/taska/projects/team_views.py:487
+msgid "Reload the page and try again."
+msgstr "Обновите страницу и повторите попытку."
+
+#: src/taska/projects/team_views.py:387 src/taska/projects/team_views.py:397
+msgid "Choose a status."
+msgstr "Выберите статус."
+
+#: src/taska/projects/team_views.py:406
+msgid "Choose a different replacement in the same category."
+msgstr "Выберите другой статус той же категории."
+
+#: src/taska/projects/team_views.py:411
+msgid "Choose an empty active status as the new review status."
+msgstr "Выберите пустой активный статус для проверки."
+
+#: src/taska/projects/team_views.py:417
+msgid "Tasks must enter review through a progress submission."
+msgstr "Для перехода на проверку необходимо отправить результат работы."
+
+#: src/taska/projects/team_views.py:440
+msgid "Move tasks before changing this status category or review role."
+msgstr ""
+"Переместите задачи перед изменением категории или назначения статуса "
+"проверки."
+
+#: src/taska/projects/team_views.py:450 src/taska/projects/team_views.py:553
+msgid "Project settings changed. Reload before trying again."
+msgstr "Настройки проекта изменились. Обновите страницу и повторите попытку."
+
+#: src/taska/projects/team_views.py:456
+msgid "This status conflicts with an existing status."
+msgstr "Такой статус уже существует или конфликтует с текущими настройками."
+
+#: src/taska/projects/team_views.py:601
+#: src/taska/templates/registration/invitation.html:2
+msgid "Sign in with the account matching this invitation."
+msgstr ""
+"Войдите в аккаунт с адресом электронной почты, указанным в приглашении."
+
+#: src/taska/projects/views.py:305
+msgid ""
+"This issue changed while you were editing. Your text is kept below. Open the "
+"latest version before saving again."
+msgstr ""
+"Задача изменилась во время редактирования. Ваш текст сохранён в форме ниже. "
+"Откройте актуальную версию перед повторным сохранением."
+
+#: src/taska/projects/views.py:338
+msgid "Confirm deletion to continue."
+msgstr "Подтвердите удаление, чтобы продолжить."
+
+#: src/taska/projects/views.py:340 src/taska/projects/views.py:352
+msgid "This issue changed. Review the latest version before deleting it."
+msgstr "Задача изменилась. Проверьте актуальную версию перед удалением."
+
+#: src/taska/projects/views.py:376
+msgid "An issue type with this name already exists."
+msgstr "Тип задачи с таким названием уже существует."
+
+#: src/taska/projects/workflow.py:59
+msgid "New tasks must start in a queue status."
+msgstr "Новая задача должна начинаться со статуса категории «Очередь»."
+
+#: src/taska/projects/workflow.py:64
+msgid "Use Submit for review or the review decision controls."
+msgstr "Используйте отправку на проверку или кнопки принятия решения."
+
+#: src/taska/projects/workflow.py:66
+msgid "Use the review decision or reopen controls."
+msgstr "Используйте кнопки проверки или возобновления задачи."
+
+#: src/taska/projects/workflow.py:104
+msgid "Task updated"
+msgstr "Задача обновлена"
+
+#: src/taska/projects/workflow.py:105
+msgid "New comment"
+msgstr "Новый комментарий"
+
+#: src/taska/projects/workflow.py:106
+msgid "Comment edited"
+msgstr "Комментарий изменён"
+
+#: src/taska/projects/workflow.py:107
+msgid "Comment deleted"
+msgstr "Комментарий удалён"
+
+#: src/taska/projects/workflow.py:108
+msgid "Progress submitted for review"
+msgstr "Результат отправлен на проверку"
+
+#: src/taska/projects/workflow.py:109
+msgid "Review approved"
+msgstr "Результат одобрен"
+
+#: src/taska/projects/workflow.py:110
+msgid "Changes requested"
+msgstr "Запрошена доработка"
+
+#: src/taska/projects/workflow.py:111
+#: src/taska/templates/projects/issue.html:38
+msgid "Assignment requested"
+msgstr "Запрошено назначение"
+
+#: src/taska/projects/workflow.py:112
+msgid "Assignment approved"
+msgstr "Назначение одобрено"
+
+#: src/taska/projects/workflow.py:113
+msgid "Assignment rejected"
+msgstr "Назначение отклонено"
+
+#: src/taska/projects/workflow.py:114
+msgid "Task participants updated"
+msgstr "Участники задачи изменены"
+
+#: src/taska/projects/workflow.py:115
+msgid "Status changed"
+msgstr "Статус изменён"
+
+#: src/taska/projects/workflow.py:135 src/taska/projects/workflow.py:146
+msgid "Choose an active working status."
+msgstr "Выберите рабочий статус активной категории."
+
+#: src/taska/projects/workflow.py:139
+msgid "Only submitted work can be reviewed."
+msgstr "Проверять можно только отправленные результаты работы."
+
+#: src/taska/projects/workflow.py:142
+msgid "There is no pending submission."
+msgstr "Нет результатов, ожидающих проверки."
+
+#: src/taska/projects/workflow.py:144
+msgid "Choose a completed status."
+msgstr "Выберите статус завершённой задачи."
+
+#: src/taska/templates/403.html:2 src/taska/templates/403.html:3
+msgid "Permission required"
+msgstr "Требуется разрешение"
+
+#: src/taska/templates/403.html:3
+msgid "Ask an administrator for access, or sign in with an authorized account."
+msgstr ""
+"Запросите доступ у администратора или войдите в учётную запись с нужными "
+"правами."
+
+#: src/taska/templates/403.html:3 src/taska/templates/404.html:3
+#: src/taska/templates/projects/boards.html:5
+msgid "Back to projects"
+msgstr "К проектам"
+
+#: src/taska/templates/403.html:3 src/taska/templates/404.html:3
+#: src/taska/templates/base.html:44
+#: src/taska/templates/registration/invitation.html:2
+#: src/taska/templates/registration/login.html:2
+msgid "Sign in"
+msgstr "Войти"
+
+#: src/taska/templates/404.html:2 src/taska/templates/404.html:3
+msgid "Page unavailable"
+msgstr "Страница недоступна"
+
+#: src/taska/templates/404.html:3
+msgid ""
+"This page may have moved, or your account does not have access. Ask your "
+"administrator if you expected to see it."
+msgstr ""
+"Возможно, страница перемещена или у вас нет доступа. Если она должна быть "
+"доступна, обратитесь к администратору."
+
+#: src/taska/templates/base.html:24
+msgid "Skip to content"
+msgstr "Перейти к содержимому"
+
+#: src/taska/templates/base.html:27 src/taska/templates/base.html:40
+#: src/taska/templates/projects/boards.html:4
+msgid "Your workspace"
+msgstr "Ваше пространство"
+
+#: src/taska/templates/base.html:28
+msgid "Main navigation"
+msgstr "Основная навигация"
+
+#: src/taska/templates/base.html:29
+#: src/taska/templates/projects/action_error.html:2
+#: src/taska/templates/projects/my_tasks.html:2
+#: src/taska/templates/projects/my_tasks.html:3
+msgid "My tasks"
+msgstr "Мои задачи"
+
+#: src/taska/templates/base.html:30 src/taska/templates/projects/board.html:4
+#: src/taska/templates/projects/list.html:2
+#: src/taska/templates/projects/list.html:4
+#: src/taska/templates/projects/my_tasks.html:3
+msgid "Projects"
+msgstr "Проекты"
+
+#: src/taska/templates/base.html:31
+#: src/taska/templates/projects/notifications.html:2
+msgid "Notifications"
+msgstr "Уведомления"
+
+#: src/taska/templates/base.html:34
+msgid "Your projects"
+msgstr "Ваши проекты"
+
+#: src/taska/templates/base.html:34 src/taska/templates/projects/list.html:7
+msgid "No projects yet"
+msgstr "Проектов пока нет"
+
+#: src/taska/templates/base.html:36 src/taska/templates/base.html:43
+msgid "Administration"
+msgstr "Администрирование"
+
+#: src/taska/templates/base.html:42
+msgid "Language"
+msgstr "Язык"
+
+#: src/taska/templates/base.html:44
+msgid "My profile"
+msgstr "Мой профиль"
+
+#: src/taska/templates/base.html:44
+msgid "Sign out"
+msgstr "Выйти"
+
+#: src/taska/templates/projects/action_error.html:2
+msgid "Action not saved"
+msgstr "Действие не сохранено"
+
+#: src/taska/templates/projects/action_error.html:2
+msgid "Your unsaved text"
+msgstr "Ваш несохранённый текст"
+
+#: src/taska/templates/projects/action_error.html:2
+msgid ""
+"Return to the task, reload its latest version and try again. Select files "
+"again if needed."
+msgstr ""
+"Вернитесь к задаче, обновите страницу и повторите попытку. При необходимости "
+"выберите файлы заново."
+
+#: src/taska/templates/projects/board.html:5
+#: src/taska/templates/projects/issue_form.html:2
+#: src/taska/templates/projects/issue_form.html:6
+#: src/taska/templates/projects/issue_form.html:10
+msgid "Create issue"
+msgstr "Создать задачу"
+
+#: src/taska/templates/projects/board.html:6
+msgid "Board"
+msgstr "Доска"
+
+#: src/taska/templates/projects/board.html:6
+#: src/taska/templates/projects/types.html:2
+#: src/taska/templates/projects/types.html:3
+msgid "Issue types"
+msgstr "Типы задач"
+
+#: src/taska/templates/projects/board.html:6
+msgid "Add or delete columns"
+msgstr "Добавить или удалить колонки"
+
+#: src/taska/templates/projects/board.html:6
+#: src/taska/templates/projects/team.html:2
+msgid "Team"
+msgstr "Команда"
+
+#: src/taska/templates/projects/board.html:8
+msgid "Clear filters"
+msgstr "Сбросить фильтры"
+
+#: src/taska/templates/projects/board.html:9
+msgid "Project board"
+msgstr "Доска проекта"
+
+#: src/taska/templates/projects/board.html:9
+msgid "Could not save. Reload the page and try again."
+msgstr "Не удалось сохранить. Обновите страницу и повторите попытку."
+
+#: src/taska/templates/projects/board.html:9
+msgid "Confirm the review decision."
+msgstr "Подтвердите решение по результатам проверки."
+
+#: src/taska/templates/projects/board.html:13
+msgid "Rename column"
+msgstr "Переименовать колонку"
+
+#: src/taska/templates/projects/board.html:13
+msgid "Save"
+msgstr "Сохранить"
+
+#: src/taska/templates/projects/board.html:13
+#: src/taska/templates/projects/statuses.html:13
+msgid "Delete column"
+msgstr "Удалить колонку"
+
+#: src/taska/templates/projects/board.html:20
+msgid "Overdue"
+msgstr "Просрочено"
+
+#: src/taska/templates/projects/board.html:21
+#: src/taska/templates/projects/board.html:25
+msgid "Move task"
+msgstr "Переместить задачу"
+
+#: src/taska/templates/projects/board.html:26
+msgid "Move up"
+msgstr "Выше"
+
+#: src/taska/templates/projects/board.html:26
+msgid "Move down"
+msgstr "Ниже"
+
+#: src/taska/templates/projects/board.html:28
+msgid "No issues in this status"
+msgstr "В этом статусе пока нет задач"
+
+#: src/taska/templates/projects/board.html:30
+msgid "Open a task to update progress or review submitted work."
+msgstr "Откройте задачу, чтобы отправить результат работы или проверить его."
+
+#: src/taska/templates/projects/boards.html:2
+#: src/taska/templates/projects/boards.html:4
+msgid "Boards"
+msgstr "Доски"
+
+#: src/taska/templates/projects/boards.html:4
+msgid "A place for each team to see the work together."
+msgstr "Место, где команда видит общую картину работы."
+
+#: src/taska/templates/projects/boards.html:5
+#: src/taska/templates/projects/list.html:6
+msgid "Open board"
+msgstr "Открыть доску"
+
+#: src/taska/templates/projects/boards.html:5
+msgid "No boards yet"
+msgstr "Досок пока нет"
+
+#: src/taska/templates/projects/boards.html:5
+msgid "Boards appear when an administrator configures your project."
+msgstr "Доски появятся после настройки проекта администратором."
+
+#: src/taska/templates/projects/issue.html:5
+#: src/taska/templates/projects/statuses.html:4
+#: src/taska/templates/projects/team.html:2
+#: src/taska/templates/projects/types.html:3
+msgid "Back to board"
+msgstr "К доске"
+
+#: src/taska/templates/projects/issue.html:7
+#: src/taska/templates/projects/issue_delete.html:2
+msgid "Delete issue"
+msgstr "Удалить задачу"
+
+#: src/taska/templates/projects/issue.html:10
+#: src/taska/templates/projects/issue_form.html:2
+#: src/taska/templates/projects/issue_form.html:6
+msgid "Edit issue"
+msgstr "Редактировать задачу"
+
+#: src/taska/templates/projects/issue.html:15
+#: src/taska/templates/projects/issue.html:30
+#: src/taska/templates/projects/issue.html:36
+#: src/taska/templates/projects/issue_form.html:10
+#: src/taska/templates/projects/profile.html:3
+#: src/taska/templates/projects/relations.html:5
+#: src/taska/templates/projects/simple_form.html:2
+#: src/taska/templates/projects/statuses.html:7
+#: src/taska/templates/projects/statuses.html:12
+#: src/taska/templates/projects/team.html:2
+msgid "Save changes"
+msgstr "Сохранить изменения"
+
+#: src/taska/templates/projects/issue.html:15
+#: src/taska/templates/projects/issue_form.html:10
+msgid "Preview description"
+msgstr "Предпросмотр описания"
+
+#: src/taska/templates/projects/issue.html:15
+#: src/taska/templates/projects/issue_delete.html:3
+#: src/taska/templates/projects/issue_form.html:5
+#: src/taska/templates/projects/statuses.html:8
+msgid "Cancel"
+msgstr "Отмена"
+
+#: src/taska/templates/projects/issue.html:16
+#: src/taska/templates/projects/issue_form.html:7
+msgid "Reload latest version"
+msgstr "Открыть актуальную версию"
+
+#: src/taska/templates/projects/issue.html:18
+#: src/taska/templates/projects/issue_form.html:12
+msgid "Description preview"
+msgstr "Предпросмотр описания"
+
+#: src/taska/templates/projects/issue.html:18
+#: src/taska/templates/projects/issue_form.html:12
+msgid "Preview only. Your changes have not been saved."
+msgstr "Это только предпросмотр. Изменения ещё не сохранены."
+
+#: src/taska/templates/projects/issue.html:20
+msgid "No description yet."
+msgstr "Описания пока нет."
+
+#: src/taska/templates/projects/issue.html:23
+msgid "Progress and review"
+msgstr "Результаты и проверка"
+
+#: src/taska/templates/projects/issue.html:24
+#: src/taska/templates/projects/issue.html:27
+msgid "Working status"
+msgstr "Рабочий статус"
+
+#: src/taska/templates/projects/issue.html:24
+msgid "Start or update work"
+msgstr "Начать работу или сменить статус"
+
+#: src/taska/templates/projects/issue.html:25
+msgid "Files and reports"
+msgstr "Файлы и отчёты"
+
+#: src/taska/templates/projects/issue.html:25
+msgid "Any file type. Default limits: 50 MiB per file, 100 MiB per submission."
+msgstr ""
+"Любые типы файлов. По умолчанию: до 50 МиБ на файл и до 100 МиБ на отчёт."
+
+#: src/taska/templates/projects/issue.html:25
+msgid "Submit for review"
+msgstr "Отправить на проверку"
+
+#: src/taska/templates/projects/issue.html:26
+msgid "Completed status"
+msgstr "Статус завершения"
+
+#: src/taska/templates/projects/issue.html:26
+msgid "Approve and complete"
+msgstr "Одобрить и завершить"
+
+#: src/taska/templates/projects/issue.html:26
+msgid "Return work to"
+msgstr "Вернуть работу в статус"
+
+#: src/taska/templates/projects/issue.html:26
+msgid "Request changes"
+msgstr "Запросить доработку"
+
+#: src/taska/templates/projects/issue.html:27
+msgid "Reopen task"
+msgstr "Возобновить задачу"
+
+#: src/taska/templates/projects/issue.html:28
+msgid "Pending review"
+msgstr "Ожидает проверки"
+
+#: src/taska/templates/projects/issue.html:28
+msgid "No progress submitted yet."
+msgstr "Результатов работы пока нет."
+
+#: src/taska/templates/projects/issue.html:30
+msgid "Comments"
+msgstr "Комментарии"
+
+#: src/taska/templates/projects/issue.html:30
+msgid "Edit comment"
+msgstr "Редактировать комментарий"
+
+#: src/taska/templates/projects/issue.html:30
+msgid "Delete comment"
+msgstr "Удалить комментарий"
+
+#: src/taska/templates/projects/issue.html:30
+#: src/taska/templates/projects/issue_delete.html:3
+#: src/taska/templates/projects/statuses.html:14
+msgid "Confirm deletion"
+msgstr "Подтвердить удаление"
+
+#: src/taska/templates/projects/issue.html:30
+msgid "Add comment"
+msgstr "Добавить комментарий"
+
+#: src/taska/templates/projects/issue.html:33
+msgid "No tags yet."
+msgstr "Тегов пока нет."
+
+#: src/taska/templates/projects/issue.html:34
+msgid "People"
+msgstr "Участники"
+
+#: src/taska/templates/projects/issue.html:36
+msgid "Manage participants"
+msgstr "Управление участниками"
+
+#: src/taska/templates/projects/issue.html:36
+msgid "Search people"
+msgstr "Поиск пользователей"
+
+#: src/taska/templates/projects/issue.html:37
+msgid "Request assignment"
+msgstr "Запросить назначение"
+
+#: src/taska/templates/projects/issue.html:37
+msgid "Stop watching"
+msgstr "Отписаться"
+
+#: src/taska/templates/projects/issue.html:37
+msgid "Watch task"
+msgstr "Наблюдать за задачей"
+
+#: src/taska/templates/projects/issue.html:38
+msgid "Approve assignment"
+msgstr "Одобрить назначение"
+
+#: src/taska/templates/projects/issue.html:38
+msgid "Reject"
+msgstr "Отклонить"
+
+#: src/taska/templates/projects/issue_delete.html:3
+#, python-format
+msgid "Delete %(reference)s?"
+msgstr "Удалить %(reference)s?"
+
+#: src/taska/templates/projects/issue_delete.html:3
+msgid ""
+"This permanently deletes the issue and removes it from the board. This "
+"cannot be undone."
+msgstr "Задача будет навсегда удалена с доски. Это действие нельзя отменить."
+
+#: src/taska/templates/projects/issue_form.html:8
+msgid "Markdown is supported. Preview your description before saving."
+msgstr ""
+"Поддерживается Markdown. Проверьте предпросмотр описания перед сохранением."
+
+#: src/taska/templates/projects/issue_form.html:13
+msgid "Manage issue types (opens a new tab)"
+msgstr "Управление типами задач (в новой вкладке)"
+
+#: src/taska/templates/projects/list.html:4
+msgid "Team space"
+msgstr "Пространство команды"
+
+#: src/taska/templates/projects/list.html:4
+msgid "Create project"
+msgstr "Создать проект"
+
+#: src/taska/templates/projects/list.html:6
+msgid "Issues"
+msgstr "Задачи"
+
+#: src/taska/templates/projects/list.html:7
+msgid "Ask an administrator to invite you to a project."
+msgstr "Попросите администратора добавить вас в проект."
+
+#: src/taska/templates/projects/list.html:7
+msgid "Open my tasks"
+msgstr "Открыть мои задачи"
+
+#: src/taska/templates/projects/markdown_tools.html:2
+msgid "Markdown formatting"
+msgstr "Форматирование Markdown"
+
+#: src/taska/templates/projects/markdown_tools.html:3
+msgid "Bold"
+msgstr "Жирный"
+
+#: src/taska/templates/projects/markdown_tools.html:4
+msgid "Italic"
+msgstr "Курсив"
+
+#: src/taska/templates/projects/markdown_tools.html:5
+msgid "Strikethrough"
+msgstr "Зачёркнутый"
+
+#: src/taska/templates/projects/markdown_tools.html:6
+msgid "Code"
+msgstr "Код"
+
+#: src/taska/templates/projects/markdown_tools.html:7
+msgid "Heading"
+msgstr "Заголовок"
+
+#: src/taska/templates/projects/markdown_tools.html:8
+msgid "List"
+msgstr "Список"
+
+#: src/taska/templates/projects/markdown_tools.html:9
+msgid "Quote"
+msgstr "Цитата"
+
+#: src/taska/templates/projects/markdown_tools.html:10
+msgid "Link"
+msgstr "Ссылка"
+
+#: src/taska/templates/projects/markdown_tools.html:12
+msgid "Saved project tags"
+msgstr "Сохранённые теги проекта"
+
+#: src/taska/templates/projects/my_tasks.html:3
+#: src/taska/templates/projects/relations.html:3
+msgid "Completed"
+msgstr "Завершённые"
+
+#: src/taska/templates/projects/my_tasks.html:3
+msgid "No assigned tasks in this view."
+msgstr "В этом списке нет назначенных вам задач."
+
+#: src/taska/templates/projects/notifications.html:2
+msgid "Mark read"
+msgstr "Отметить прочитанным"
+
+#: src/taska/templates/projects/notifications.html:2
+msgid "No notifications yet."
+msgstr "Уведомлений пока нет."
+
+#: src/taska/templates/projects/relations.html:2
+msgid "Task relations"
+msgstr "Связи задач"
+
+#: src/taska/templates/projects/relations.html:3
+msgid "Task progress"
+msgstr "Прогресс задачи"
+
+#: src/taska/templates/projects/relations.html:5
+#: src/taska/templates/projects/relations.html:7
+msgid "Relation type"
+msgstr "Тип связи"
+
+#: src/taska/templates/projects/relations.html:5
+msgid "Remove relation"
+msgstr "Удалить связь"
+
+#: src/taska/templates/projects/relations.html:5
+msgid "No related tasks yet."
+msgstr "Связанных задач пока нет."
+
+#: src/taska/templates/projects/relations.html:6
+#: src/taska/templates/projects/relations.html:7
+msgid "Add relation"
+msgstr "Добавить связь"
+
+#: src/taska/templates/projects/relations.html:6
+msgid "Find a task by ID or title"
+msgstr "Найти задачу по ID или названию"
+
+#: src/taska/templates/projects/relations.html:6
+msgid "Search"
+msgstr "Найти"
+
+#: src/taska/templates/projects/relations.html:7
+msgid "No matching tasks"
+msgstr "Задачи не найдены"
+
+#: src/taska/templates/projects/statuses.html:2
+#: src/taska/templates/projects/statuses.html:4
+msgid "Statuses"
+msgstr "Статусы"
+
+#: src/taska/templates/projects/statuses.html:5
+msgid ""
+"Columns run from left to right. Use the arrows to change their order; new "
+"columns appear at the end."
+msgstr ""
+"Колонки идут слева направо. Меняйте порядок стрелками; новые колонки "
+"добавляются в конец."
+
+#: src/taska/templates/projects/statuses.html:6
+#: src/taska/templates/projects/statuses.html:12
+msgid "Edit status"
+msgstr "Редактировать статус"
+
+#: src/taska/templates/projects/statuses.html:6
+msgid "Create status"
+msgstr "Создать статус"
+
+#: src/taska/templates/projects/statuses.html:11
+msgid "Move left"
+msgstr "Левее"
+
+#: src/taska/templates/projects/statuses.html:11
+msgid "Move right"
+msgstr "Правее"
+
+#: src/taska/templates/projects/statuses.html:14
+msgid ""
+"This column contains tasks. Choose where to move them before deleting it."
+msgstr "В колонке есть задачи. Перед удалением выберите, куда их перенести."
+
+#: src/taska/templates/projects/statuses.html:14
+msgid "Move tasks to"
+msgstr "Переместить задачи в"
+
+#: src/taska/templates/projects/statuses.html:14
+msgid ""
+"Tasks keep their category. A review column transfers its review role to an "
+"empty active column."
+msgstr ""
+"Категория задач сохраняется. Колонка проверки передаёт свою роль пустой "
+"активной колонке."
+
+#: src/taska/templates/projects/statuses.html:14
+msgid "This column is empty. Deleting it will not delete any tasks."
+msgstr "Колонка пуста. Её удаление не удалит задачи."
+
+#: src/taska/templates/projects/team.html:2
+msgid "Copy this invitation link now"
+msgstr "Скопируйте ссылку-приглашение сейчас"
+
+#: src/taska/templates/projects/team.html:2
+msgid "Expires in seven days. Share only with the intended recipient."
+msgstr "Действует семь дней. Передайте ссылку только адресату приглашения."
+
+#: src/taska/templates/projects/team.html:2
+msgid "Invite a participant"
+msgstr "Пригласить участника"
+
+#: src/taska/templates/projects/team.html:2
+msgid "Create invitation"
+msgstr "Создать приглашение"
+
+#: src/taska/templates/projects/team.html:2
+msgid "Remove access"
+msgstr "Отозвать доступ"
+
+#: src/taska/templates/projects/team.html:2
+msgid "Pending invitations"
+msgstr "Активные приглашения"
+
+#: src/taska/templates/projects/team.html:2
+msgid "Revoke invitation"
+msgstr "Отозвать приглашение"
+
+#: src/taska/templates/projects/types.html:3
+msgid "Create issue type"
+msgstr "Создать тип задачи"
+
+#: src/taska/templates/registration/invitation.html:2
+msgid "Accept invitation"
+msgstr "Принять приглашение"
+
+#: src/taska/templates/registration/login.html:2
+msgid "Sign in to Taska"
+msgstr "Вход в Taska"
+
+#: src/taska/templates/registration/login.html:2
+msgid "An invitation is required to join."
+msgstr "Для регистрации необходимо приглашение."

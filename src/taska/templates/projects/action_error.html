@@ -1,0 +1,2 @@
+{% extends 'base.html' %}{% load i18n %}
+{% block content %}<section class="panel narrow"><h1>{% translate 'Action not saved' %}</h1><p role="alert">{{ error }}</p>{% if form %}{{ form.errors }}{% endif %}{% if request.POST.body %}<label for="unsaved">{% translate 'Your unsaved text' %}</label><textarea id="unsaved" readonly rows="8">{{ request.POST.body }}</textarea>{% endif %}<p>{% translate 'Return to the task, reload its latest version and try again. Select files again if needed.' %}</p><a href="{% url 'todos' %}">{% translate 'My tasks' %}</a></section>{% endblock %}

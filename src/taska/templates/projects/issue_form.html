@@ -1,0 +1,17 @@
+{% extends 'base.html' %}{% load i18n static %}
+{% block title %}{% if issue %}{% translate 'Edit issue' %}{% else %}{% translate 'Create issue' %}{% endif %}{% endblock %}
+{% block content %}
+<section class="panel narrow issue-editor">
+  <a class="back" href="{% if issue %}{% url 'issue-detail' project.key issue.number %}{% else %}{% url 'project-board' project.key %}{% endif %}">← {% translate 'Cancel' %}</a>
+  <p class="mono muted">{% if issue %}{{ issue.reference }}{% else %}{{ project.key }}{% endif %}</p><h1>{% if issue %}{% translate 'Edit issue' %}{% else %}{% translate 'Create issue' %}{% endif %}</h1>
+  {% if issue %}<a class="back" href="{% url 'issue-edit' project.key issue.number %}">{% translate 'Reload latest version' %}</a>{% endif %}
+  <p class="muted">{% translate 'Markdown is supported. Preview your description before saving.' %}</p>
+  <form method="post" data-track-changes data-unsaved="{% if form.is_bound %}true{% else %}false{% endif %}">{% csrf_token %}{{ form.as_p }}
+    <div class="form-actions"><button class="primary" name="action" value="save">{% if issue %}{% translate 'Save changes' %}{% else %}{% translate 'Create issue' %}{% endif %}</button><button name="action" value="preview" formnovalidate>{% translate 'Preview description' %}</button></div>
+  </form>
+  {% if preview is not None %}<section class="preview" aria-label="{% translate 'Description preview' %}"><h2>{% translate 'Description preview' %}</h2><div class="markdown">{{ preview|safe }}</div><p class="muted small">{% translate 'Preview only. Your changes have not been saved.' %}</p></section>{% endif %}
+  {% if manager %}<a class="back" href="{% url 'issue-types' project.key %}" target="_blank" rel="noopener">{% translate 'Manage issue types (opens a new tab)' %}</a>{% endif %}
+</section>
+{% include "projects/markdown_tools.html" %}
+<script src="{% static 'js/issue-form.js' %}" defer></script>
+{% endblock %}

@@ -1,0 +1,1 @@
+<a class="person-link" href="{% url 'person-profile' person.pk %}"><img class="avatar" src="{% url 'person-avatar' person.pk %}" alt="" width="32" height="32" loading="lazy"><span>{{ person.get_full_name|default:person.username }}</span></a>

@@ -1,0 +1,16 @@
+{% extends 'base.html' %}{% load i18n %}
+{% block title %}{% translate 'Statuses' %}{% endblock %}
+{% block content %}
+<a class="back" href="{% url 'project-board' project.key %}">← {% translate 'Back to board' %}</a><h1>{% translate 'Statuses' %}</h1>
+<p class="muted">{% translate 'Columns run from left to right. Use the arrows to change their order; new columns appear at the end.' %}</p>
+<section class="panel" id="status-create"><h2>{% if editing %}{% translate 'Edit status' %}{% else %}{% translate 'Create status' %}{% endif %}</h2>
+<form method="post">{% csrf_token %}{% if editing %}<input type="hidden" name="status_id" value="{{ editing.pk }}">{% endif %}{{ form.as_p }}<button class="primary">{% translate 'Save changes' %}</button></form>
+{% if editing %}<a href="{% url 'project-statuses' project.key %}">{% translate 'Cancel' %}</a>{% endif %}</section>
+{% for status in statuses %}<section class="panel status-settings" id="status-{{ status.pk }}">
+<header class="page-heading"><div><h2>{% translate status.name %}</h2><p>{{ status.get_category_display }}{% if status.is_review %} · {% translate 'Review status' %}{% endif %}</p></div>
+<form method="post" class="form-actions">{% csrf_token %}<input type="hidden" name="version" value="{{ project.version }}"><input type="hidden" name="status_id" value="{{ status.pk }}"><button name="action" value="left" {% if forloop.first %}disabled{% endif %}>← {% translate 'Move left' %}</button><button name="action" value="right" {% if forloop.last %}disabled{% endif %}>{% translate 'Move right' %} →</button></form></header>
+<details><summary class="button tonal">{% translate 'Edit status' %}</summary><form method="post">{% csrf_token %}<input type="hidden" name="status_id" value="{{ status.pk }}">{{ status.edit_form.as_p }}<button class="primary">{% translate 'Save changes' %}</button></form></details>
+<details><summary class="button text-button danger">{% translate 'Delete column' %}</summary><form method="post">{% csrf_token %}<input type="hidden" name="version" value="{{ project.version }}"><input type="hidden" name="action" value="delete"><input type="hidden" name="status_id" value="{{ status.pk }}">
+{% if status.issues.exists %}<p>{% translate 'This column contains tasks. Choose where to move them before deleting it.' %}</p><label for="replace-{{ status.pk }}">{% translate 'Move tasks to' %}</label><select name="replacement" id="replace-{{ status.pk }}" required><option value="">—</option>{% for replacement in statuses %}{% if replacement.pk != status.pk and replacement.category == status.category %}<option value="{{ replacement.pk }}">{% translate replacement.name %}</option>{% endif %}{% endfor %}</select><p>{% translate 'Tasks keep their category. A review column transfers its review role to an empty active column.' %}</p>{% else %}<p>{% translate 'This column is empty. Deleting it will not delete any tasks.' %}</p>{% endif %}<button class="danger">{% translate 'Confirm deletion' %}</button></form></details>
+</section>{% endfor %}
+{% endblock %}

@@ -32,7 +32,6 @@ env/
 .env
 .env.local
 .env.*.local
-.env.quick-start
 .codex
 .agents
 # Local instructions for AI coding agents
@@ -76,5 +75,13 @@ logs/
 Thumbs.db
 desktop.ini
 
-# Alembic (keep versions/, ignore local overrides if any)
-# alembic/versions/ is tracked
+# Django collected assets
+staticfiles/
+
+# Local demonstration credentials and browser reports
+.demo-credentials.json
+artifacts/
+
+private-media/
+mail-data/
+.mail.env

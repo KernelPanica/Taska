@@ -1,0 +1,3 @@
+{% extends 'base.html' %}{% load i18n %}
+{% block title %}{{ person.get_full_name|default:person.username }}{% endblock %}
+{% block content %}<section class="panel narrow"><img class="profile-avatar" src="{% url 'person-avatar' person.pk %}" alt="" width="96" height="96"><h1>{{ person.get_full_name|default:person.username }}</h1><p class="muted">@{{ person.username }}</p>{% if form %}<form method="post" enctype="multipart/form-data">{% csrf_token %}{{ form.as_p }}<button class="primary">{% translate 'Save changes' %}</button></form>{% else %}<p>{{ record.bio|linebreaksbr }}</p><p><a href="mailto:{{ person.email }}">{{ person.email }}</a></p>{% endif %}</section>{% endblock %}

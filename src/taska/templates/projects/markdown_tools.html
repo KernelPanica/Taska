@@ -1,0 +1,12 @@
+{% load i18n %}
+<template id="markdown-tools"><div class="markdown-tools" role="group" aria-label="{% translate 'Markdown formatting' %}">
+<button type="button" data-wrap="**" aria-label="{% translate 'Bold' %}" title="{% translate 'Bold' %}"><b>B</b></button>
+<button type="button" data-wrap="*" aria-label="{% translate 'Italic' %}" title="{% translate 'Italic' %}"><i>I</i></button>
+<button type="button" data-wrap="~~" aria-label="{% translate 'Strikethrough' %}" title="{% translate 'Strikethrough' %}"><s>S</s></button>
+<button type="button" data-wrap="`" aria-label="{% translate 'Code' %}" title="{% translate 'Code' %}">&lt;/&gt;</button>
+<button type="button" data-prefix="## " aria-label="{% translate 'Heading' %}" title="{% translate 'Heading' %}">H</button>
+<button type="button" data-prefix="- " aria-label="{% translate 'List' %}" title="{% translate 'List' %}">•</button>
+<button type="button" data-prefix="&gt; " aria-label="{% translate 'Quote' %}" title="{% translate 'Quote' %}">❯</button>
+<button type="button" data-link aria-label="{% translate 'Link' %}" title="{% translate 'Link' %}">↗</button>
+</div></template>
+<template id="saved-tags"><div class="tag-suggestions" role="group" aria-label="{% translate 'Saved project tags' %}">{% for tag in tag_suggestions %}<button type="button" class="chip" data-tag="{{ tag.name }}">{{ tag.name }}</button>{% endfor %}</div></template>

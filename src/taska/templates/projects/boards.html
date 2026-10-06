@@ -1,0 +1,6 @@
+{% extends 'base.html' %}{% load i18n %}
+{% block title %}{% translate 'Boards' %}{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">{% translate 'Your workspace' %}</p><h1>{% translate 'Boards' %}</h1><p class="muted">{% translate 'A place for each team to see the work together.' %}</p></div></div>
+<div class="project-grid">{% for board in boards %}<a class="project-card" href="{% url 'project-board' board.project.key %}"><svg class="icon" aria-hidden="true"><use href="#icon-boards"/></svg><h2>{% translate board.name %}</h2><p>{{ board.project.name }}</p><span class="open-link">{% translate 'Open board' %}<svg class="icon" aria-hidden="true"><use href="#icon-arrow"/></svg></span></a>{% empty %}<section class="panel empty"><h2>{% translate 'No boards yet' %}</h2><p>{% translate 'Boards appear when an administrator configures your project.' %}</p><a class="button tonal" href="{% url 'projects' %}">{% translate 'Back to projects' %}</a></section>{% endfor %}</div>
+{% endblock %}

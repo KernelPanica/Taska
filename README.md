@@ -1,215 +1,128 @@
 # Taska
 
-Taska — self-hosted рабочее пространство для распределения задач между участниками команды. Приложение предоставляет серверный HTML-интерфейс на FastAPI и хранит данные через SQLAlchemy (по умолчанию — в SQLite).
+Django workspace built against [Taska-Roadmap.md](Taska-Roadmap.md) and
+[DESIGN.md](DESIGN.md): dark surfaces, blue actions, English/Russian UI.
 
-Интерфейс собран вокруг быстрого рабочего потока: дашборд показывает активность и статусы, проекты организованы по задачам, а профиль и уведомления доступны из общего верхнего меню. Встроены светлая, тёмная и Windows XP темы, адаптивная вёрстка для мобильных экранов и быстрый переход по разделам.
+**Current scope: Checkpoint 4, ready for review.** Private project task tracking
+with PM-controlled assignments and completion, progress reports/files, comments,
+watcher notifications, invitation-based access and configurable Kanban columns.
+My tasks lists assigned project issues. Email is optional and disabled by default.
+Kanban supports dragging, persisted ordering, keyboard/touch controls, metadata
+filters and conflict detection; PMs can move tasks directly without confirmation. Task descriptions are Markdown
+pages with inline editing and separate metadata. Tasks support relations, blocking,
+parent/child hierarchies and completion progress.
 
-## Релиз Taska
+## One-command local demo
 
-Taska превращает командную работу в единое self-hosted пространство без зависимости от внешнего SaaS. Администратор один раз настраивает организацию, приглашает участников и назначает роли, а команда получает проекты, Kanban-доски, спринты, профили и уведомления в одном интерфейсе.
+Requires Python 3.11+ with venv/pip and an internet connection for installation.
 
-### Что входит в релиз
+```sh
+sh dev.sh
+```
 
-- полностью переработанный современный интерфейс с адаптивной вёрсткой;
-- светлая, тёмная и стилизованная Windows XP темы;
-- единый дизайн форм, списков, чекбоксов, карточек, таблиц и статусов;
-- фирменный логотип Taska и favicon;
-- общий shell с быстрым меню, уведомлениями, профилем и командной палитрой переходов;
-- дашборды участника и администратора со статистикой, графиками и текущими задачами;
-- управление проектами, задачами, статусами, приоритетами, тегами и сроками;
-- Kanban-доска с drag-and-drop перемещением задач, фильтрами, WIP-лимитами и быстрым изменением статуса;
-- спринты с backlog, планированием, Story Points, приоритетами и переносом задач;
-- аналитика спринтов: Burndown, Velocity, загрузка команды и распределение задач;
-- WIP-лимиты для статусов Kanban;
-- отдельный prototype board для визуального планирования проекта, заметок и связей между объектами;
-- лента прогресса задачи с текстовыми обновлениями и процентом готовности;
-- отклики участников на задачи и запросы на смену статуса;
-- проверка обязательных тегов и ограничение одной активной задачи;
-- уведомления о прогрессе, откликах, изменениях и решениях PM;
-- профили сотрудников с должностью, стажем, описанием, навыками и аватарами;
-- предложения тегов участниками и модерация со стороны администратора;
-- приглашения по одноразовым ссылкам;
-- роли администратора, PM и участника;
-- вход по логину и паролю, Discord OAuth, GitHub OAuth, Telegram Login и passkey;
-- привязка нескольких passkey, GitHub, Telegram и Discord к существующему аккаунту;
-- первичная настройка организации через защищённый `/setup`;
-- SQLite по умолчанию и совместимость с базами SQLAlchemy;
-- Docker Compose для быстрого self-hosted запуска;
-- OpenAPI и Swagger UI от FastAPI.
+Open http://127.0.0.1:8000/login/ and use `demo-manager`, `demo-member`, `demo-observer` or
+`demo-admin`. Their generated passwords are in the local `.demo-credentials.json`
+file (owner-readable only, ignored by Git and Docker). Never deploy demo mode.
 
-## Quick Start через Docker
+The script installs runtime dependencies, migrates `demo.sqlite3`, seeds the empty
+TASKA project and starts a loopback server. Rerunning does not reset accounts or
+project records. Demo data is separate from the regular `db.sqlite3` database.
 
-Понадобится Docker с Compose v2. В Linux, macOS, WSL или Git Bash выполните:
+See [the checkpoint demonstration](docs/CHECKPOINT-4.md) for the full scenario and
+optional sample issues. [Architecture](docs/ARCHITECTURE.md) records domain, API,
+access rules and deferred features. The review guide tracks checkpoint acceptance.
 
-```bash
-git clone <URL-репозитория>
-cd Taska-1
+## Local setup
+
+```sh
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver
+```
+
+This uses `db.sqlite3` (or exported `TASKA_DATABASE_PATH`). No demo users are created.
+Use `/admin/` to create projects and appoint project managers. New projects get
+a board, Task/Bug/Request/Story/Epic types and To do / In progress / In review / Done columns. PMs use
+Team to invite members/observers and Statuses to configure the board.
+Members work on assigned tasks and submit evidence; PMs approve completion.
+Observers can read and comment. Accounts require an invitation or admin creation.
+
+## Docker
+
+```sh
 sh quick-start.sh
+docker compose exec taska python manage.py createsuperuser
 ```
 
-Скрипт автоматически:
+The script creates `.env` with a random secret if absent. For manual setup, copy
+`.env.example` and replace the placeholder secret. Open http://localhost:8000.
+`TASKA_PORT` changes the published port. Logs: `docker compose logs -f taska`.
+Stop with `docker compose down`. SQLite persists at `/data/django.sqlite3` in the
+`taska-data` volume; private uploads persist at `/data/uploads`. Migrations run before Gunicorn starts; WhiteNoise serves assets.
 
-- сгенерирует уникальные `TASKA_SECRET_KEY` и `TASKA_SETUP_KEY`;
-- сохранит их в игнорируемый Git файл `.env.quick-start` с ограниченными правами;
-- соберёт Docker-образ и запустит приложение в фоне;
-- выведет адрес `/setup` и ключ создания первого администратора.
+For public deployment set `TASKA_DEBUG=false`, a unique `TASKA_SECRET_KEY`, explicit
+`TASKA_ALLOWED_HOSTS` (retain localhost for health checks) and the appropriate
+`TASKA_CSRF_TRUSTED_ORIGINS`. Terminate TLS at a trusted proxy; configure Django's
+`SECURE_PROXY_SSL_HEADER` only when that proxy strips untrusted forwarded headers,
+then enable `TASKA_HTTPS=true`. Run Django's `check --deploy` and back up data first.
+Never set `TASKA_DEMO_MODE=true` on a deployed installation.
 
-Откройте [http://localhost:8000/setup](http://localhost:8000/setup) и используйте показанный скриптом setup-ключ. После проверки ключа откроется отдельная форма регистрации администратора и настройки организации. По завершении войдите под созданной учётной записью. База SQLite хранится в Docker volume `taska-data` и сохраняется между перезапусками.
+## API
 
-```bash
-# Логи
-docker compose logs -f taska
+Session-authenticated read endpoints:
 
-# Остановка без удаления данных
-docker compose down
+- `/api/projects/`
+- `/api/projects/TASKA/`
+- `/api/projects/TASKA/issues/`
 
-# Полное удаление вместе с базой
-docker compose down -v
+The clean TASKA demo returns `{"issues": []}`. Errors use
+`{"error": {"code": "…", "message": "…"}}` with meaningful HTTP status codes.
+Hidden projects return 404. `/health` checks database connectivity.
+The read API is intended for checkpoint-sized datasets, not production migration.
+
+## Verification
+
+```sh
+.venv/bin/python -m pip install -r requirements-dev.txt
+.venv/bin/ruff check .
+.venv/bin/ruff format --check .
+.venv/bin/python manage.py test taska.todos taska.projects --settings=taska.test_settings
+PYTHONPATH=src .venv/bin/python tests/check_persistence.py
+.venv/bin/python manage.py makemigrations --check --dry-run --settings=taska.test_settings
+.venv/bin/python manage.py collectstatic --noinput
+.venv/bin/python -m playwright install chromium
+RUN_BROWSER=1 .venv/bin/python manage.py test tests.browser --settings=taska.test_settings
 ```
 
-Для другого локального порта:
+Tests use an isolated database. Browser tests cover all three checkpoint flows at four
+viewport sizes, Russian, keyboard focus, reduced motion and core color contrast.
+CI runs format, migration, integration and browser checks automatically.
 
-```bash
-TASKA_PORT=8080 sh quick-start.sh
+## Languages
+
+Use EN/RU in the header. Browser language supplies the initial preference; the
+selection persists in a cookie. Native Django form messages and dates are localized;
+user-entered titles are preserved. System fonts include Cyrillic support without
+external font requests. Catalogs are bundled in Docker and Python packages.
+After editing translations (GNU gettext required):
+
+```sh
+python manage.py makemessages -l ru --ignore=.venv --ignore=staticfiles --no-wrap
+python manage.py compilemessages -l ru --ignore=.venv
 ```
 
-Порт записывается в WebAuthn-настройки при первом создании `.env.quick-start`. Если файл уже существует, измените в нём `TASKA_BASE_URL` и `TASKA_WEBAUTHN_ORIGIN` вручную либо удалите файл и снова запустите скрипт (ключ первоначальной настройки при этом изменится).
+## Optional email
 
-Этот quick start предназначен для локального запуска. Для публичного деплоя настройте HTTPS и реальные `TASKA_BASE_URL`, `TASKA_WEBAUTHN_RP_ID` и `TASKA_WEBAUTHN_ORIGIN` в `.env.quick-start` перед регистрацией passkey.
+Taska runs without any email service. Use your SMTP provider or the separate,
+opt-in `bash setup-mail.sh` installer. See [email setup and delivery](docs/EMAIL.md).
+Nothing installs or starts SMTP during normal Taska startup.
 
-## Возможности
+## Data
 
-- первичная настройка организации и создание администратора через `/setup`;
-- вход по логину и паролю, выход с очисткой cookie-сессии;
-- опциональная авторизация и привязка профиля через GitHub OAuth и Telegram Login;
-- вход и привязка профиля через Discord OAuth без автоматической регистрации;
-- вход по passkey через Windows Hello, биометрию Android или аппаратный ключ;
-- приглашения участников по одноразовой ссылке;
-- профили сотрудников с должностью, стажем, описанием и тегами;
-- предложения тегов участниками и модерация администратором;
-- проекты и задачи, которые создают PM и администраторы;
-- отклики участников на задачи, проверка обязательных тегов и ограничение одной активной задачи;
-- статусы задач: `unassigned`, `in_progress`, `in_review`, `paused`, `needs_changes`, `done`, `closed`;
-- административная панель для приглашений, ролей и тегов.
-- лента прогресса задачи с текстовыми обновлениями и процентом готовности;
-- запросы исполнителя на смену статуса с рассмотрением PM;
-- уведомления о прогрессе и решениях по запросам;
-- темы интерфейса: светлая, тёмная и Windows XP.
-
-## Требования
-
-- Python 3.11 или новее;
-- `pip` и виртуальное окружение;
-- SQLite для локального запуска либо совместимая база данных SQLAlchemy.
-
-## Запуск без Docker
-
-```powershell
-git clone <URL-репозитория>
-cd Taska-1
-py -3.11 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -e ".[dev]"
-Copy-Item .env.example .env
-python -m taska.main
-```
-
-Перед первым запуском обязательно сгенерируйте секретный deploy-ключ и запишите его в `TASKA_SETUP_KEY`:
-
-```powershell
-python -c "import secrets; print(secrets.token_urlsafe(32))"
-```
-
-После запуска откройте [http://localhost:8000](http://localhost:8000). При пустой базе приложение автоматически перенаправит на `/setup`. Сначала введите deploy-ключ из окружения. После его проверки приложение на 15 минут откроет отдельную форму организации и регистрации администратора (пароль — минимум 8 символов). По завершении войдите через обычную страницу авторизации. База и таблицы создаются при старте приложения.
-
-Также доступна консольная команда, установленная из `pyproject.toml`:
-
-```powershell
-taska
-```
-
-Для запуска без reload можно выставить `TASKA_DEBUG=false` в `.env` и запускать приложение через Uvicorn:
-
-```powershell
-uvicorn taska.main:app --host 0.0.0.0 --port 8000
-```
-
-## Конфигурация
-
-Настройки читаются из `.env` с префиксом `TASKA_`. Актуальный шаблон находится в [.env.example](.env.example).
-
-| Переменная | Назначение | Значение по умолчанию |
-| --- | --- | --- |
-| `TASKA_APP_NAME` | имя приложения до первичной настройки | `Taska` |
-| `TASKA_DEBUG` | debug и auto-reload | `false` |
-| `TASKA_SECRET_KEY` | ключ подписи JWT и шифрования данных | `change-me-in-production` |
-| `TASKA_DATABASE_URL` | URL базы SQLAlchemy | `sqlite:///./taska.db` |
-| `TASKA_BASE_URL` | внешний URL приложения | `http://localhost:8000` |
-| `TASKA_SETUP_KEY` | секретный ключ создания первого администратора (минимум 32 символа) | пусто |
-| `TASKA_WEBAUTHN_RP_ID` | домен WebAuthn без схемы и порта | `localhost` |
-| `TASKA_WEBAUTHN_RP_NAME` | имя сервиса в диалоге passkey | `Taska` |
-| `TASKA_WEBAUTHN_ORIGIN` | точный origin приложения для проверки passkey | `http://localhost:8000` |
-| `TASKA_GITHUB_CLIENT_ID` / `TASKA_GITHUB_CLIENT_SECRET` | GitHub OAuth для входа и привязки аккаунта | пусто |
-| `TASKA_TELEGRAM_BOT_TOKEN` / `TASKA_TELEGRAM_BOT_USERNAME` | Telegram Login Widget для входа и привязки аккаунта | пусто |
-| `TASKA_DISCORD_CLIENT_ID` / `TASKA_DISCORD_CLIENT_SECRET` | Discord OAuth для входа, привязки и аватара | пусто |
-
-Перед публикацией замените `TASKA_SECRET_KEY` и `TASKA_SETUP_KEY` на разные длинные случайные значения и отключите debug. После создания администратора setup-маршрут автоматически закрывается. OAuth-провайдеры необязательны: соответствующие кнопки появляются только при заполненной конфигурации.
-
-Для GitHub создайте OAuth App и укажите callback URL `https://ваш-домен/auth/github/callback`. Для Telegram создайте бота через BotFather, задайте домен командой `/setdomain` и заполните обе переменные Telegram. Все OAuth API-ключи и токены должны находиться только в `.env` или `.env.quick-start`; они не вводятся и не сохраняются через интерфейс Taska.
-
-Для Discord создайте приложение в Discord Developer Portal и добавьте redirect URL `https://ваш-домен/auth/discord/callback`. Discord используется только после привязки к аккаунту, созданному по приглашению. Если пользователь загрузил собственный аватар, он имеет приоритет; иначе используется аватар Discord или первая буква ника.
-
-Passkey требует HTTPS, кроме разработки на `localhost`. Например, для `https://taska.example.com` задайте `TASKA_WEBAUTHN_RP_ID=taska.example.com` и `TASKA_WEBAUTHN_ORIGIN=https://taska.example.com`. RP ID и origin нельзя менять после регистрации passkey без повторной привязки устройств.
-
-## Роли и рабочий процесс
-
-- Администратор создаёт приглашения, управляет профилями и тегами, а также видит административную статистику.
-- Пользователь регистрируется только по приглашению: через логин и пароль либо через Discord. При Discord-регистрации пароль можно задать позже в профиле.
-- Администратор назначает пользователям роли, стаж и теги через страницу профиля сотрудника.
-- После обычного входа пользователь может безопасно привязать GitHub, Telegram и несколько passkey. Эти способы входа не создают новые аккаунты и работают только с уже приглашённым пользователем.
-- PM (код должности начинается с `PM-`) создаёт проекты и задачи, задаёт обязательные теги и рассматривает отклики.
-- Участник видит доступные задачи и может подать заявку, если у него есть все обязательные теги. После одобрения задача переходит в `in_progress`.
-
-Основные страницы: `/`, `/login`, `/projects`, `/profiles`, `/account`, `/admin`, `/health`.
-
-## Разработка
-
-Запуск тестов:
-
-```powershell
-pytest
-```
-
-Для визуальной проверки запустите приложение и откройте `http://localhost:8000` в браузере. Основные экраны для проверки: `/`, `/login`, `/projects` и `/admin` (для администратора).
-
-Проверка стиля:
-
-```powershell
-ruff check .
-```
-
-Тесты используют отдельную временную SQLite-базу и не должны изменять локальный `taska.db`. Файлы базы (`*.db`, `*.sqlite3`), `.env`, кэш и виртуальные окружения исключены из Git.
-
-## Структура проекта
-
-```text
-src/taska/
-├── main.py              # FastAPI-приложение, middleware и запуск
-├── config.py            # настройки из окружения
-├── database.py          # SQLAlchemy engine/session
-├── models/              # User, Project, Task, Invitation, Tag и настройки сайта
-├── routes/              # HTML-маршруты setup/auth/dashboard/admin/projects/profiles
-├── services/            # бизнес-логика setup, аккаунтов, приглашений и задач
-├── auth/                # cookie/JWT, пароли и OAuth
-├── templates/           # Jinja2-шаблоны интерфейса
-└── static/              # CSS
-tests/                   # интеграционные тесты маршрутов и сервисов
-```
-
-## API и документация
-
-Приложение в основном ориентировано на HTML-формы. FastAPI также автоматически публикует OpenAPI по адресу `/openapi.json` и Swagger UI по `/docs`.
-
-## Лицензия
-
-Проект распространяется по лицензии GPL v3.0.
+Migrations preserve existing records, including retired private to-do rows. Back up
+the database and private upload directory together before updates. Existing members
+are not automatically promoted to PMs.
+Taiga import is planned for Checkpoint 7 in [Taska-Roadmap.md](Taska-Roadmap.md).
