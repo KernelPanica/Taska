@@ -53,7 +53,7 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-test("the producer hides an epic's content, looks as a member and sees only the title; the GD lead edits a ticket of his stream in another team", async ({
+test("the producer hides an epic's content, views as a member from their profile and sees only the title; the GD lead edits a ticket of his stream in another team", async ({
   page,
   browser,
   baseURL,
@@ -62,6 +62,7 @@ test("the producer hides an epic's content, looks as a member and sees only the 
   type Item = { id: string; name: string; catalog?: { username?: string } };
   const people = (await api<{ items: Item[] }>(page, "GET", "/api/v1/people")).items;
   const ben = people.find((person) => person.catalog?.username === "ben") as Item;
+  const member = people.find((person) => person.catalog?.username === "anna") as Item;
   const findOrCreate = async (path: string, name: string, body: Record<string, unknown>) => {
     const found = (await api<{ items: Item[] }>(page, "GET", path)).items.find((item) => item.name === name);
     if (found) return Object.keys(body).length ? api<Item>(page, "PATCH", `${path}/${found.id}`, body) : found;
@@ -98,11 +99,14 @@ test("the producer hides an epic's content, looks as a member and sees only the 
   await page.getByRole("button", { name: "Применить видимость" }).click();
   await expect(page.getByText("Только заголовок", { exact: true }).first()).toBeVisible();
 
-  // Смотрит как участник: «Режим показа» в шапке, роль выбирается один раз.
-  await page.getByRole("button", { name: "Режим показа" }).click();
-  await page.getByLabel("Роль для показа").selectOption({ label: "Участник" });
-  await expect(page.getByText("Режим показа: Участник")).toBeVisible();
+  // Смотрит глазами участника из его профиля.
+  await page.goto(`/people/${member.id}`);
+  await page.getByRole("button", { name: "Смотреть глазами", exact: true }).click();
+  const lensBanner = page.getByText(`Смотрите глазами: ${member.name}`, { exact: true });
+  await expect(lensBanner).toBeVisible();
+  await page.goto(`/tickets/${epic.key}`);
   await page.reload();
+  await expect(lensBanner).toBeVisible();
   await expect(page.getByRole("heading", { level: 1, name: "Секретный эпик" })).toBeVisible();
   await expect(page.getByText("Видно только название")).toBeVisible();
   await expect(page.getByText("Сцена с боссом")).toHaveCount(0);
@@ -110,11 +114,11 @@ test("the producer hides an epic's content, looks as a member and sees only the 
   await page.goto("/spaces/production");
   await expect(page.getByRole("link", { name: "Секретный эпик" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Сцена с боссом" })).toHaveCount(0);
-  // Дирекция в режиме показа не видна.
+  // Дирекция при просмотре глазами участника не видна.
   await page.goto("/");
   await expect(page.getByRole("link", { name: /Дирекция/ })).toHaveCount(0);
   await page.getByRole("button", { name: "Выключить" }).first().click();
-  await expect(page.getByText("Режим показа: Участник")).toHaveCount(0);
+  await expect(lensBanner).toHaveCount(0);
   await expect(page.getByRole("link", { name: /Дирекция/ })).toBeVisible();
 
   // Лид ГД правит описание тикета своего стрима в команде Хрюшки, но не исполнителя.
