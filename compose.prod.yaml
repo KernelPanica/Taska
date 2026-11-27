@@ -1,0 +1,17 @@
+# Production: docker compose -f compose.prod.yaml up -d --build
+# Все обязательные переменные — в .env (см. .env.example). Заглушка YourSpace и тестовые данные запрещены.
+services:
+  yourtask:
+    build: .
+    env_file: .env
+    environment:
+      YOURTASK_PROFILE: production
+      YOURTASK_TRUST_PROXY: "true"
+    ports:
+      - "127.0.0.1:${YOURTASK_PORT:-3000}:3000"
+    volumes:
+      - yourtask-data:/data
+    restart: unless-stopped
+
+volumes:
+  yourtask-data:

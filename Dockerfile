@@ -1,21 +1,36 @@
-FROM python:3.12-slim
-
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app/src
-
+FROM node:24-bookworm-slim AS build
 WORKDIR /app
 
-RUN addgroup --system taska && adduser --system --ingroup taska taska
+COPY package.json package-lock.json ./
+COPY packages/contracts/package.json packages/contracts/package.json
+COPY apps/api/package.json apps/api/package.json
+COPY apps/web/package.json apps/web/package.json
+RUN npm ci
 
-COPY requirements.txt ./
-RUN python -m pip install --no-cache-dir -r requirements.txt
+COPY tsconfig.base.json ./
+COPY packages ./packages
+COPY apps ./apps
+RUN npm run build && npm prune --omit=dev
 
-COPY src ./src
-COPY docker-entrypoint.sh ./docker-entrypoint.sh
-RUN mkdir -p /data && chown -R taska:taska /app /data
+FROM node:24-bookworm-slim
+ENV NODE_ENV=production \
+    HOST=0.0.0.0 \
+    PORT=3000 \
+    YOURTASK_DATABASE_PATH=/data/yourtask.db
+WORKDIR /app
 
-USER taska
-EXPOSE 8000
+COPY --from=build /app/package.json /app/package-lock.json ./
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/packages/contracts/package.json ./packages/contracts/package.json
+COPY --from=build /app/packages/contracts/dist ./packages/contracts/dist
+COPY --from=build /app/apps/api/package.json ./apps/api/package.json
+COPY --from=build /app/apps/api/dist ./apps/api/dist
+COPY --from=build /app/apps/api/drizzle ./apps/api/drizzle
+COPY --from=build /app/apps/web/dist ./apps/web/dist
 
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
+RUN mkdir -p /data && chown -R node:node /data
+USER node
+EXPOSE 3000
+HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=5 \
+  CMD node -e "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+CMD ["node", "apps/api/dist/index.js"]

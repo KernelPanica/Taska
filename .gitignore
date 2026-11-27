@@ -1,3 +1,7 @@
+# Node
+node_modules/
+dist/
+
 # Python
 __pycache__/
 *.py[cod]
@@ -6,7 +10,6 @@ __pycache__/
 .Python
 build/
 develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/
@@ -28,15 +31,27 @@ venv/
 ENV/
 env/
 
-# Environment variables
+# Environment variables and secrets
 .env
 .env.local
 .env.*.local
 .env.quick-start
-.codex
-.agents
-# Local instructions for AI coding agents
+.env.*
+!.env.example
+!**/.env.example
+.codex/
+.agents/
+.claude/
+.unlazy/
+# Local instructions and scratch tasks for AI coding agents
 AGENTS.md
+[Aa][Gg][Ee][Nn][Tt].md
+[Tt][Aa][Ss][Kk].md
+prompt.md
+To-Do-List.md
+# Local session checkpoints
+docs/superpowers/plans/*shared-context.md
+docs/superpowers/plans/*wrap-up.md
 
 # IDE
 .idea/
@@ -52,9 +67,16 @@ AGENTS.md
 htmlcov/
 .tox/
 .nox/
+coverage/
 coverage.xml
 *.cover
 .hypothesis/
+playwright-report/
+blob-report/
+test-results/
+.playwright/
+.playwright-cli/
+output/playwright/
 
 # Type checkers
 .mypy_cache/
@@ -63,9 +85,15 @@ dmypy.json
 .pytype/
 .ruff_cache/
 
-# Database
+# Data
+/data/
+.secret-key
 *.db
+*.db-*
+*.sqlite
+*.sqlite-*
 *.sqlite3
+*.sqlite3-*
 
 # Logs
 *.log
@@ -78,3 +106,6 @@ desktop.ini
 
 # Alembic (keep versions/, ignore local overrides if any)
 # alembic/versions/ is tracked
+
+# Демо: база пересоздаётся при каждом запуске
+tools/demo/data/

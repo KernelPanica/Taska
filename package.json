@@ -1,0 +1,38 @@
+{
+  "name": "yourtask",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/contracts",
+    "apps/api",
+    "apps/web"
+  ],
+  "scripts": {
+    "dev": "concurrently --names api,web --prefix-colors blue,magenta \"npm run dev --workspace @yourtask/api\" \"npm run dev --workspace @yourtask/web\"",
+    "build": "npm run build --workspaces --if-present",
+    "start": "npm run start --workspace @yourtask/api",
+    "db:migrate": "npm run db:migrate --workspace @yourtask/api",
+    "db:seed": "npm run db:seed --workspace @yourtask/api",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm test --workspaces --if-present",
+    "test:e2e": "playwright test",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm test"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.0",
+    "concurrently": "10.0.7",
+    "eslint": "10.14.0",
+    "prettier": "3.6.2",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.2",
+    "vitest": "5.1.0"
+  }
+}
