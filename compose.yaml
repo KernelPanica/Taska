@@ -1,21 +1,15 @@
+# Локальный запуск одной командой: docker compose up --build → http://localhost:3000
+# Профиль development: заглушка YourSpace и тестовые данные включены. Для production — compose.prod.yaml.
 services:
-  taska:
+  yourtask:
     build: .
-    env_file:
-      - ${TASKA_ENV_FILE_SOURCE:-.env}
     environment:
-      TASKA_DATABASE_PATH: /data/django.sqlite3
-      TASKA_MEDIA_ROOT: /data/uploads
+      YOURTASK_PROFILE: development
+      YOURTASK_PUBLIC_URL: http://localhost:3000
     ports:
-      - "${TASKA_PORT:-8000}:8000"
+      - "127.0.0.1:3000:3000"
     volumes:
-      - taska-data:/data
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
-      start_period: 10s
+      - yourtask-dev-data:/data
+
 volumes:
-  taska-data:
+  yourtask-dev-data:

@@ -1,128 +1,146 @@
-# Taska
+# YourTask
 
-Django workspace built against [Taska-Roadmap.md](Taska-Roadmap.md) and
-[DESIGN.md](DESIGN.md): dark surfaces, blue actions, English/Russian UI.
+Таск-трекер экосистемы YourSpace. Сейчас это каркас: сервер, база, веб-интерфейс, вход аккаунтом YourSpace, документированный API и автотесты. На нём строятся остальные карточки.
 
-**Current scope: Checkpoint 4, ready for review.** Private project task tracking
-with PM-controlled assignments and completion, progress reports/files, comments,
-watcher notifications, invitation-based access and configurable Kanban columns.
-My tasks lists assigned project issues. Email is optional and disabled by default.
-Kanban supports dragging, persisted ordering, keyboard/touch controls, metadata
-filters and conflict detection; PMs can move tasks directly without confirmation. Task descriptions are Markdown
-pages with inline editing and separate metadata. Tasks support relations, blocking,
-parent/child hierarchies and completion progress.
+## Навигация
 
-## One-command local demo
+Слева: «Организация» (пространства, доски, люди, фичекоманды, колодцы, измерения, корзина), «Мои доски», «Я» (уведомления, сессии, собственный профиль) и «Настройка тикетов». Последняя категория видна только суперадмину. Поиск находится над категориями. «Профиль» открывает карточку вошедшего участника; кнопка «Выйти» находится только в собственной карточке. Нижнего блока аккаунта в боковом меню нет.
 
-Requires Python 3.11+ with venv/pip and an internet connection for installation.
+English labels: Organization, My boards, Me and Ticket setup. Ticket setup is visible only to superadmins; Profile opens the signed-in person's card; Sign out appears only in that own-profile page. The sidebar has no account footer. Search remains above the categories.
 
-```sh
-sh dev.sh
+## Запуск одной командой
+
+Нужен **Node.js 22.12+** (рекомендуется 24) **или** Docker. Ничего настраивать не нужно: база создаётся и мигрируется сама, тестовые данные появляются автоматически, вместо YourSpace работает встроенная заглушка.
+
+```bash
+npm install && npm run dev
 ```
 
-Open http://127.0.0.1:8000/login/ and use `demo-manager`, `demo-member`, `demo-observer` or
-`demo-admin`. Their generated passwords are in the local `.demo-credentials.json`
-file (owner-readable only, ignored by Git and Docker). Never deploy demo mode.
+Откройте <http://localhost:5173>. API и собранный интерфейс также доступны на <http://localhost:3000>.
 
-The script installs runtime dependencies, migrates `demo.sqlite3`, seeds the empty
-TASKA project and starts a loopback server. Rerunning does not reset accounts or
-project records. Demo data is separate from the regular `db.sqlite3` database.
+Или через Docker:
 
-See [the checkpoint demonstration](docs/CHECKPOINT-4.md) for the full scenario and
-optional sample issues. [Architecture](docs/ARCHITECTURE.md) records domain, API,
-access rules and deferred features. The review guide tracks checkpoint acceptance.
-
-## Local setup
-
-```sh
-python3 -m venv .venv
-. .venv/bin/activate
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py createsuperuser
-python manage.py runserver
+```bash
+docker compose up --build
 ```
 
-This uses `db.sqlite3` (or exported `TASKA_DATABASE_PATH`). No demo users are created.
-Use `/admin/` to create projects and appoint project managers. New projects get
-a board, Task/Bug/Request/Story/Epic types and To do / In progress / In review / Done columns. PMs use
-Team to invite members/observers and Statuses to configure the board.
-Members work on assigned tasks and submit evidence; PMs approve completion.
-Observers can read and comment. Accounts require an invitation or admin creation.
+Откройте <http://localhost:3000>.
 
-## Docker
+### Как войти
 
-```sh
-sh quick-start.sh
-docker compose exec taska python manage.py createsuperuser
+Нажмите «Войти через YourSpace» — откроется страница-заглушка YourSpace. Пароль всех тестовых аккаунтов — `yourspace`.
+Каталог людей заглушки — <http://localhost:3000/dev/yourspace/people>: там, как в разделе «Люди» настоящего YourSpace, заводят, правят и деактивируют людей. YourTask подхватывает изменения сразу.
+
+| Логин         | Что показывает                                                    |
+| ------------- | ----------------------------------------------------------------- |
+| `anna`        | обычный вход; также «Войти через Google» → `anna.test@gmail.test` |
+| `ben`         | английский язык в профиле                                         |
+| `admin`       | вход суперадмина со второй проверкой, код `123456`                |
+| `admin-no2fa` | суперадмину без второй проверки вход запрещён                     |
+| `vera`        | обычный (не тестовый) пользователь — тестовых данных не видит     |
+
+Сценарии для демонстрации:
+
+- **Каркас:** вход `anna` → «Тестовое пространство» (пустое) → переключатель RU/EN в шапке → «Сессии» → отзыв сессии.
+- **Структура команды:** человека заводят в каталоге заглушки (`/dev/yourspace/people`), потом вход `admin` (код `123456`) → «Организация → Люди / Фичекоманды / Колодцы / Измерения». Суперадмин заводит команду «Жабы», колодец «ГД» с лидом и ставит человека в две команды. Тестовые данные уже содержат три фичекоманды и шесть колодцев с ПМами и лидами; стартовые пространства «Дирекция», «Core», «Инфраструктура», «Производство» есть в любой установке.
+- **Люди из каталога (YT-03):** в `/dev/yourspace/people` заводим человека с Telegram и телефоном → в YourTask он сразу есть в «Людях»; суперадмин ставит его в команду → в каталоге меняем Telegram — карточка в YourTask показывает новый; телефон и дата рождения в YourTask только маской → человек входит → «Деактивировать» в каталоге → его сессия закрыта, войти нельзя, а карточка, имя и участие в команде остались. «Люди → Отчёт сопоставления»: Пётр, заведённый до перехода с другой почтой, — неразобранная строка; «Связать» — и неразобранных строк нет.
+
+- **Конструктор типов (YT-04):** вход `admin` → «Настройка тикетов → Шкалы оценки»: своя шкала «Очки» и строка конвертера «1 очк. ≈ 0,5–1 дн.» → «Поля»: поле-список «Платформа релиза» → «Типы тикетов»: тип «Веха» с цветом, иконкой и этим полем, шаблон «Релиз» → тип «Стори» → шаблон «Стори»: предпросмотр со структурой из R-2.7; поставьте «Размер» M и «Оценку в днях» 6 — рядом с M ориентир «≈ 3–5 дн.», а свёртка родителя пересчитывается в выбранной шкале. В пространстве — переключатель «Ограничители подчинения» (по умолчанию выключен) и ссылка на его конвертер.
+
+- **Схемы статусов (YT-05):** `admin` → «Типы тикетов» → «Стори» → «Открыть схему статусов»: категории (очередь, в работе, завершён), буферы «… Done» с признаком «ожидание», исходы, обязательное на входе. В To Do отметьте «Стрим» в «Обязательно на входе» и сохраните. Статус без категории или завершённый без исхода не сохраняется.
+- **Тикет (YT-06):** вход `anna` → «Тестовое пространство» → название, тип «Стори», шаблон «Стори» → «Создать». В карточке: чеклист, два исполнителя, размер M, 6 дней, срок → «Сохранить» → «Перевести в» Discovery. Попытка перейти в To Do без обязательного — понятная ошибка. Другую стори — «Отменить тикет» с причиной; «В архив» и «Вернуть из архива».
+
+- **Журнал и комментарии (YT-07):** в карточке тикета несколько правок (исполнители, приоритет, размер) → вкладка «Действия» внизу: кто, когда, «было → стало»; там же выгрузка последовательности статусов в CSV. Вкладка «Комментарии»: напишите `@be` — подсказка вставит `@ben`, ключ другого тикета станет ссылкой → «Сделать тикетом»: задача со ссылкой на комментарий, комментарий показывает её статус.
+
+- **Права (YT-08):** вход `admin` (код `123456`) → «Настройка тикетов → Права»: шесть готовых профилей R-5.2, конструктор «право × область», выдачи «кто × где × профиль» (ПМ и лид — из карточки группы), журнал безопасности. В «Производстве» создайте эпик → блок «Видимость» → «Только заголовок» → «Применить видимость» → «Режим показа» в шапке → роль «Участник» (запоминается): эпик виден только названием, его дети и «Дирекция» пропали; «Выключить» — всё вернулось. Лид колодца ГД (`ben`) правит описание тикета своего стрима в команде «Хрюшки», но не исполнителя. «Смотреть глазами» — на карточке человека (суперадмин). Маска поля — на странице поля.
+- **Иерархия и дерево (YT-09):** `anna` → эпик в «Тестовом пространстве» → в блоке «Связи» «+ ребёнок» одной строкой (Enter) → «Дерево» (из списка или «Ветка в дереве» в карточке): отметьте две стори → «Обернуть» — новый уровень встал между ними и эпиком. «Добавить родителя по ключу» — второй родитель, в дереве стори появится дважды, второй раз с пометкой «тот же тикет». «+ родитель» с типом «Цель» над эпиком — охват у потомков. Перетаскивание в дереве меняет порядок и родителя.
+- **Свёртки (YT-10):** эпик с двумя задачами → одну в Creation — эпик сам ушёл в In Progress, во «Действиях» «система · свёртка» → обе в Done — полоса «2 из 2» и флаг «Все дети закрыты — закрыть тикет?» → ПМ переводит эпик в Done. Пункт чеклиста стори может ссылаться на ребёнка («Ребёнок пунктом чеклиста») — отметится сам. Даты и оценки эпика — сумма по детям рядом с ручными.
+- **Номер в потоке (YT-11):** эпик с десятью задачами — у задач номера 1.1 … 1.10 рядом с ключом. В карточке эпика «+ ребёнок» → «Куда: Перед 1.5 …» → Enter, и ещё раз: новые задачи стали 1.5 и 1.6, бывшая 1.5 — 1.7, номера её детей пересчитаны; во «Действиях» сдвинутых — «Номер 1.5 → 1.7, вставлен AOS-…» (система · пересчёт номеров). Ссылка по ключу ведёт на тот же тикет. У тикета с двумя родителями в шапке два номера: «№ 1.3 в AOS-…», «№ 2.1 в AOS-…». Список пространства — «Порядок: По потоку».
+- **Связи и ссылки (YT-12):** вход `admin` (код `123456`) → стори → «Добавить связь или родителя»: «Блокирует» + ключ другой стори → у той видно «Заблокирован»; «Тип связи» меняет его одним действием. Баг → «Вызван» + ключ стори: баг не стал ребёнком и не входит в прогресс. «Ссылки» → вставьте адрес документа из заглушки YourWiki (`/dev/yourwiki`) — живое название и «доступ есть»; переименуйте документ на странице заглушки — в тикете новое название. Войдите `anna`: у «ТехГДД» — «нет доступа» без названия и «Запросить», запрос виден в заглушке. Типы связей — «Настройка тикетов → Типы связей».
+- **Вложения (YT-13):** в карточке тикета перетащите в блок «Вложения» видео и скриншот (или вставьте скриншот через Ctrl+V) — превью сразу, видео играет; «Вставить в описание» — видео в тексте описания. В поле описания или комментария файл можно вставить прямо на место курсора. Слишком большой файл или запрещённый тип — понятная ошибка до начала загрузки. Лимиты и типы — «Настройка тикетов → Вложения» (`admin`), действуют сразу. Во «Действиях» — «Прикреплён файл …».
+- **Корзина (YT-14):** в карточке эпика с детьми нажмите «В корзину» — диалог спросит про детей, по умолчанию «Оставить без этой связи»; внизу плашка «Отменить». У ребёнка — «След родителя» и строка в «Действиях». Слева «Корзина» → «Восстановить»: эпик вернётся со всеми связями. Второй сценарий (`admin`, код `123456`): «Удалить навсегда» → у ребёнка след «удалён окончательно», ссылка `parentTrace(AOS-…)` находит всех бывших детей, «Связать заново» привязывает их к новому родителю одним действием. Лид, удаливший тикеты команды своего стрима, — ПМу приходит уведомление в колокольчик.
+- **TQL и поиск (YT-15):** войдите как `ben` (лид ГД) → «Search» → в конструкторе «condition»: `stream` = `GD`, ещё одно: `assignee.guild` = `GD`, нажмите «and», чтобы стало «or» → «Text» показывает `stream = GD or assignee.guild = GD` → «Save filter» с галочкой «For everyone in “Производство”». Под `anna` фильтр виден в «Общие». Ошибка в тексте (`staus = Done`) подсвечена с подсказкой «Может быть, status?». Ctrl+K — ключ или слова отовсюду. Системное имя команды или колодца для запросов (`Frogs`, `GD`) задаётся в их карточке.
+- **Доски (YT-16):** в меню «Мои доски» → «Жабы»: колонки-зоны Discovery / Delivery / Done, дорожки по родителю (AOS-4 стоит в двух — вторая помечена «тот же тикет»), «Производство 4 / 3 · WIP превышен». Перетащите стори из «Бэклога» в «Производство» — на месте броска выбор Creation или Implementation; баг в «Проработку» не переносится, причина объяснена. «Детализация 1 / 2 / 3», ▸/▾ у зоны и «Скрыть уровень» — ваши настройки, они же в адресе. Откройте доску под `anna` во втором окне — перенос админа появится у неё без перезагрузки. «Лид ГД» — та же сущность с фильтром `stream = GD or assignee.guild = GD` и дорожками по команде. У каждого есть «Мои задачи». Статус без зоны (например, добавленный в схему бага «Review») уходит в «Не сопоставлено»; привязать — «Настроить» → «Зоны».
+- **Дорожки, чипы, ссылка (YT-17):** войдите как `ben` (лид ГД) → «Лид ГД»: дорожки по командам и «No feature team», сверху — «Срочно» (`priority = Urgent`). Нажмите чип «Жабы» — дорожка уходит без перехода и остаётся скрытой после перезагрузки. «Lanes» → «by stream»: тикет с двумя стримами стоит в двух дорожках, в счётчиках — один раз. «Только люди колодца ГД» в «More» оставляет карточки людей колодца. «Link to the board» копирует адрес с фильтром, чипами и дорожками — откройте его под `anna`: тот же вид в пределах её прав, её собственные настройки не меняются. «Уточнить» добавляет к фильтру TQL прямо в ссылке.
+- **Уведомления (YT-18):** откройте два окна: `anna` (наблюдает за AOS-4, скриптом камеры и багом камеры) и `ben` (ПМ Жаб). Бен в карточке AOS-4 переводит статус — у Анны без перезагрузки загорается колокольчик и всплывает «… — Creation → …». Повторная смена того же тикета обновляет ту же запись. Бен в «Search» находит тикеты, «выбрать все» → статус → «Change selected»: у наблюдателя одно уведомление «статус N тикетов» с пометкой «одно сообщение на пакет». «Уведомления» в меню — каждый вид отключается. В «Режиме показа» колокольчик не показывает тикеты, скрытые от роли. Тестовый адаптер очереди: `GET /api/v1/notifications/test-outbox` (суперадмин, не в production).
+
+## Команды
+
+| Команда              | Что делает                                                    |
+| -------------------- | ------------------------------------------------------------- |
+| `npm run dev`        | API (порт 3000, перезапуск при изменениях) + Vite (порт 5173) |
+| `npm run check`      | формат, линтер, типы, все автотесты — то же, что CI           |
+| `npm test`           | автотесты API и интерфейса (Vitest)                           |
+| `npm run test:e2e`   | сквозные тесты в браузере (Playwright)                        |
+| `npm run format`     | отформатировать код (Prettier)                                |
+| `npm run build`      | production-сборка                                             |
+| `npm start`          | запустить собранное приложение                                |
+| `npm run db:migrate` | применить миграции (повторный запуск безопасен)               |
+| `npm run db:seed`    | миграции + тестовые данные (не работает в production)         |
+
+Для e2e нужен Chromium: системный (`/usr/bin/chromium`) или `npx playwright install chromium`.
+
+## Устройство
+
+```
+packages/contracts   общие типы API: ошибки, пользователь, сессии, пространства, языки
+apps/api             Fastify 5 + SQLite (better-sqlite3, Drizzle)
+  src/auth           вход через YourSpace, заглушка YourSpace, OIDC-адаптер, сессии
+  src/ticket-types   типы тикетов, схемы статусов, поля, шаблоны, шкалы оценки и конвертер
+  src/tickets        тикеты: ключ, поля, люди, статус, архив, смена типа; журнал и комментарии;
+                     дерево (замыкание), операции иерархии, свёртки, номер в потоке
+  src/attachments    вложения: загрузка частями с докачкой, тип по содержимому, выдача по правам
+  src/integrations   YourWiki по WK-02 и его заглушка, заголовки внешних ссылок (защита от SSRF)
+  src/access         права: профили R-5.2, выдачи, видимость, маска полей, «Смотреть как», журнал безопасности
+  src/catalog        каталог людей YourSpace: синхронизация, отчёт сопоставления, выгрузка для профиля
+  src/spaces         пространства
+  src/directory      люди, колодцы (guilds), фичекоманды, измерения
+  src/testing        тестовые аккаунты и сид
+  drizzle/           версионированные SQL-миграции
+  tests/             автотесты API
+apps/web             React 19 + Vite + TanStack Query; словари RU/EN в src/i18n
+e2e/                 Playwright
+docs/adr/            технические решения со ссылками на требования
 ```
 
-The script creates `.env` with a random secret if absent. For manual setup, copy
-`.env.example` and replace the placeholder secret. Open http://localhost:8000.
-`TASKA_PORT` changes the published port. Logs: `docker compose logs -f taska`.
-Stop with `docker compose down`. SQLite persists at `/data/django.sqlite3` in the
-`taska-data` volume; private uploads persist at `/data/uploads`. Migrations run before Gunicorn starts; WhiteNoise serves assets.
+- **API:** документация — <http://localhost:3000/api/docs>, схема — `/api/openapi.json`. Ошибки — RFC 9457 Problem Details с полем `code` ([ADR 0004](docs/adr/0004-api-first-problem-details.md)).
+- **Вход:** кнопка «Войти через YourSpace». При первом подтверждённом входе профиль YourTask создаётся автоматически; повторный вход использует тот же профиль по постоянному идентификатору YourSpace. Отдельной регистрации и паролей YourTask нет. Вход только аккаунтом YourSpace (отдельный сервис, OpenID Connect); YourTask паролей не хранит; суперадмину — обязательная вторая проверка; сессии отзываются ([ADR 0003](docs/adr/0003-yourspace-sign-in.md), [ADR 0009](docs/adr/0009-catalog-people.md)).
+- **Люди:** приходят из общего каталога YourSpace; YourTask ведёт только язык, норму WIP, колодцы и фичекоманды. Чувствительные поля профиля — только маской. Деактивация в каталоге сразу закрывает вход ([ADR 0009](docs/adr/0009-catalog-people.md)).
+- **Типы тикетов:** типы, поля, шаблоны и шкалы оценки настраивает админ без разработчика; конвертер оценок — на пространство ([ADR 0010](docs/adr/0010-ticket-types.md)).
+- **Статусы и тикеты:** схема статусов на тип в пространстве ([ADR 0011](docs/adr/0011-status-schemes.md)); тикет с ключом AOS-N и защитой от потери параллельных правок ([ADR 0012](docs/adr/0012-tickets.md)); неизменяемый журнал и комментарии ([ADR 0013](docs/adr/0013-history-comments.md)).
+- **Права, иерархия, свёртки:** каждое чтение и изменение проверяет права «кто × где × что» и видимость на сервере ([ADR 0014](docs/adr/0014-access-rights.md)); несколько родителей и дерево ([ADR 0015](docs/adr/0015-hierarchy.md)); родитель знает статус, прогресс, даты и оценки по детям ([ADR 0016](docs/adr/0016-rollups.md)); номер в потоке 1.3.2 пересчитывается сам, ссылки — только по ключу ([ADR 0017](docs/adr/0017-flow-numbers.md)); связи видны с обеих сторон, документы YourWiki — с живым названием и доступом каждого человека через API WK-02 ([ADR 0018](docs/adr/0018-links.md)); вложения — вне публичного каталога, только через права, с лимитами админа и докачкой ([ADR 0019](docs/adr/0019-attachments.md)).
+- **Доски:** доска — фильтр TQL с владельцем (пространство или человек) и раскладкой; колонки — дерево зон с детализацией 1 / 2 / 3, перенос с выбором статуса, «Не сопоставлено», WIP на зоне, живые изменения через `GET /api/v1/events` ([ADR 0022](docs/adr/0022-boards-zones.md)); дорожки и чипы по любому измерению и фильтрам TQL, состояние доски в ссылке ([ADR 0023](docs/adr/0023-board-lanes-chips-link.md)).
+- **Уведомления:** события R-2.27 → одно сообщение на получателя за запрос → очередь событий с каналами (колокольчик, тестовый адаптер; позже почта и Telegram); живые записи; права проверяются при каждом чтении, в «Режиме показа» — глазами роли ([ADR 0024](docs/adr/0024-notifications.md)).
+- **Профили:** `development`, `test` (автотесты, БД в памяти) и `production` ([ADR 0002](docs/adr/0002-modular-monolith.md)).
+- **Решения:** [каталог ADR](docs/adr/README.md).
 
-For public deployment set `TASKA_DEBUG=false`, a unique `TASKA_SECRET_KEY`, explicit
-`TASKA_ALLOWED_HOSTS` (retain localhost for health checks) and the appropriate
-`TASKA_CSRF_TRUSTED_ORIGINS`. Terminate TLS at a trusted proxy; configure Django's
-`SECURE_PROXY_SSL_HEADER` only when that proxy strips untrusted forwarded headers,
-then enable `TASKA_HTTPS=true`. Run Django's `check --deploy` and back up data first.
-Never set `TASKA_DEMO_MODE=true` on a deployed installation.
+## Оформление / Appearance
 
-## API
+Интерфейс использует визуальную систему YourWiki: IBM Plex Sans, общую палитру, контролы, карточки и таблицы. Светлая и тёмная темы автоматически следуют настройке операционной системы. На узких экранах навигация открывается кнопкой меню; широкие таблицы и доски прокручиваются внутри своей области.
 
-Session-authenticated read endpoints:
+The interface shares YourWiki's visual system. Light and dark themes follow the operating system; navigation collapses on narrow screens, while wide tables and boards scroll within their own containers.
 
-- `/api/projects/`
-- `/api/projects/TASKA/`
-- `/api/projects/TASKA/issues/`
+## Production
 
-The clean TASKA demo returns `{"issues": []}`. Errors use
-`{"error": {"code": "…", "message": "…"}}` with meaningful HTTP status codes.
-Hidden projects return 404. `/health` checks database connectivity.
-The read API is intended for checkpoint-sized datasets, not production migration.
-
-## Verification
-
-```sh
-.venv/bin/python -m pip install -r requirements-dev.txt
-.venv/bin/ruff check .
-.venv/bin/ruff format --check .
-.venv/bin/python manage.py test taska.todos taska.projects --settings=taska.test_settings
-PYTHONPATH=src .venv/bin/python tests/check_persistence.py
-.venv/bin/python manage.py makemigrations --check --dry-run --settings=taska.test_settings
-.venv/bin/python manage.py collectstatic --noinput
-.venv/bin/python -m playwright install chromium
-RUN_BROWSER=1 .venv/bin/python manage.py test tests.browser --settings=taska.test_settings
+```bash
+cp .env.example .env   # заполнить секрет, адрес и настройки YourSpace
+docker compose -f compose.prod.yaml up -d --build
 ```
 
-Tests use an isolated database. Browser tests cover all three checkpoint flows at four
-viewport sizes, Russian, keyboard focus, reduced motion and core color contrast.
-CI runs format, migration, integration and browser checks automatically.
+В production обязательны `YOURTASK_SECRET_KEY`, `YOURTASK_PUBLIC_URL` и OIDC-настройки YourSpace; заглушка YourSpace и тестовые данные запрещены — приложение не запустится.
 
-## Languages
+Подключение к YourSpace (протокол — `docs/connect-a-product.md` в репозитории YourSpace):
 
-Use EN/RU in the header. Browser language supplies the initial preference; the
-selection persists in a cookie. Native Django form messages and dates are localized;
-user-entered titles are preserved. System fonts include Cyrillic support without
-external font requests. Catalogs are bundled in Docker and Python packages.
-After editing translations (GNU gettext required):
+1. На сервере YourSpace: `npm run cli -- client add yourtask "YourTask" https://task.example.com/api/v1/auth/callback` — команда печатает `client_id` и `client_secret`.
+2. В `.env` YourTask: `YOURTASK_PROFILE=production`, `YOURTASK_YOURSPACE_MODE=oidc`, `YOURTASK_SEED_TEST_DATA=false`, `YOURTASK_YOURSPACE_ISSUER` (адрес YourSpace), `YOURTASK_YOURSPACE_CLIENT_ID`, `YOURTASK_YOURSPACE_CLIENT_SECRET`. Тот же клиент читает каталог людей.
+3. Для блока «Из YourTask» в профиле YourSpace: задать `YOURTASK_CATALOG_EXPORT_TOKEN` и передать его YourSpace; он читает `GET /api/v1/catalog/org`.
+4. После первого запуска суперадмин открывает «Люди → Отчёт сопоставления» и разбирает строки, пока неразобранных не останется.
 
-```sh
-python manage.py makemessages -l ru --ignore=.venv --ignore=staticfiles --no-wrap
-python manage.py compilemessages -l ru --ignore=.venv
-```
+### Переключатель сайтов YourSpace
 
-## Optional email
+Сверху на каждой странице — общая панель сайтов, как в YourSpace (спецификация — `docs/site-switcher.md` в репозитории YourSpace). Список подключённых сайтов YourTask берёт у YourSpace (`GET <YourSpace>/api/products`), держит в кэше 5 минут и сам сортирует: YourSpace первым, остальные по алфавиту. Если YourSpace не отвечает, панель рисуется из последнего удачного ответа, а без него — с YourSpace и YourTask. Логотипы известных сайтов лежат копиями в `apps/web/public/sites/`.
 
-Taska runs without any email service. Use your SMTP provider or the separate,
-opt-in `bash setup-mail.sh` installer. See [email setup and delivery](docs/EMAIL.md).
-Nothing installs or starts SMTP during normal Taska startup.
-
-## Data
-
-Migrations preserve existing records, including retired private to-do rows. Back up
-the database and private upload directory together before updates. Existing members
-are not automatically promoted to PMs.
-Taiga import is planned for Checkpoint 7 in [Taska-Roadmap.md](Taska-Roadmap.md).
+| Переменная                                                                                             | Что задаёт                                                                                                                                                                                                                                                                                                                                                                                      |
+| ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `YOURTASK_YOURSPACE_URL`                                                                               | Адрес YourSpace, откуда берётся список сайтов. По умолчанию — `YOURTASK_YOURSPACE_ISSUER`, в разработке — заглушка `/dev/yourspace/`.                                                                                                                                                                                                                                                           |
+| `YOURSPACE_YOURDASH_URL`, `YOURSPACE_YOURMAIL_URL`, `YOURSPACE_YOURTASK_URL`, `YOURSPACE_YOURWIKI_URL` | Только для разработки: адреса сайтов, которые отдаёт заглушка YourSpace (`/dev/yourspace/api/products`). Это те же переменные, что в `.env` YourSpace. Пустая — сайт не подключён и не показывается. Адрес полный, через HTTPS (http — только localhost), без логина и пароля. При неверном адресе YourTask не стартует и называет переменную. В production адреса задаются в `.env` YourSpace. |

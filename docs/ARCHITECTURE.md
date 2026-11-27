@@ -117,7 +117,6 @@ and transaction lock with task actions. Position is independent of the permanent
 issue number; all workflow transitions append to the destination column.
 Complete audit history, migration tooling and Gantt remain deferred.
 
-
 ## Editor, tags and profiles
 
 The title becomes an input in the page header when editing is opened; the permanent
@@ -139,7 +138,6 @@ Columns are created at the end, reordered by left/right controls, edited in plac
 and deleted separately. A populated deletion asks where to move existing tasks.
 The review checkbox explains the assignee submission → PM acceptance/return flow;
 it requires the active category and remains unique per project.
-
 
 ## Relations and hierarchy
 

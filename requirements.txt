@@ -1,7 +1,0 @@
-Django>=5.2.8,<5.3
-gunicorn>=23,<24
-whitenoise>=6.8,<7
-
-markdown-it-py>=3,<5
-
-Pillow>=12,<13

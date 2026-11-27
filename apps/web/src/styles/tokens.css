@@ -1,0 +1,96 @@
+:root {
+  /* The same Enterprise palette as YourWiki's enterprise.css. */
+  color-scheme: light;
+  --color-primary: #0c5cab;
+  --color-secondary: #094f96;
+  --color-success: #176b46;
+  --color-warning: #8a4b08;
+  --color-danger: #b42332;
+  --color-surface: #f5f7fb;
+  --color-text: #18181b;
+  --color-on-primary: #fff;
+
+  --color-surface-raised: #fff;
+  --color-surface-subtle: #edf1f7;
+  --color-surface-hover: #edf1f7;
+  --color-text-secondary: #52525b;
+  --color-text-muted: #52525b;
+  --color-border: #d9dee8;
+  /* Slightly darker than YourWiki's #858d9b: >=3:1 against inset inputs. */
+  --color-border-strong: #838b99;
+  --color-focus: #0c5cab;
+  --color-primary-soft: #0a529b;
+  --color-success-soft: #176b46;
+  --color-warning-soft: #8a4b08;
+  --color-danger-soft: #b42332;
+  --color-glass: rgb(255 255 255 / 88%);
+  --color-glass-subtle: #fff;
+  --color-overlay: rgb(24 24 27 / 48%);
+  --color-primary-muted: #e8f0fb;
+  --color-success-muted: #eaf8f0;
+  --color-warning-muted: #fff7e8;
+  --color-danger-muted: #fff0f1;
+  --color-glow: rgb(12 92 171 / 7.5%);
+
+  --font-sans: "IBM Plex Sans Variable", "IBM Plex Sans", system-ui, sans-serif;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.75rem;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --shadow-soft: 0 16px 48px #1c355023, 0 2px 8px #1c355012;
+  --shadow-panel: 0 2px 4px #1c355008;
+  --gradient-panel: var(--color-surface-raised);
+  --gradient-primary: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  --duration-fast: 140ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --color-secondary: #0e68bd;
+    --color-success: #72d7a4;
+    --color-warning: #f6c77e;
+    --color-danger: #ffb2b8;
+    --color-surface: #09090b;
+    --color-text: #fafafa;
+    --color-surface-raised: #111318;
+    --color-surface-subtle: #0c0e12;
+    --color-surface-hover: #191c23;
+    --color-text-secondary: #a6adbc;
+    --color-text-muted: #a6adbc;
+    --color-border: #2b303c;
+    --color-border-strong: #687386;
+    --color-focus: #8fc5ff;
+    --color-primary-soft: #8fc5ff;
+    --color-success-soft: #72d7a4;
+    --color-warning-soft: #f6c77e;
+    --color-danger-soft: #ffb2b8;
+    --color-glass: rgb(17 19 24 / 88%);
+    --color-glass-subtle: #111318;
+    --color-overlay: rgb(0 0 0 / 64%);
+    --color-primary-muted: #14283f;
+    --color-success-muted: #112c23;
+    --color-warning-muted: #302616;
+    --color-danger-muted: #341c24;
+    --color-glow: rgb(60 123 220 / 10%);
+    --shadow-soft: 0 20px 56px #0007, 0 2px 8px #0003;
+    --shadow-panel: 0 2px 4px #0003;
+  }
+}
